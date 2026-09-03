@@ -178,7 +178,7 @@ describe('Un estado nuevo sin layout recibe automáticamente una posición', () 
 
   it('parseDocumentObject acepta un documento con solo `machine` (sin layout ni styles)', () => {
     const result = parseDocumentObject({
-      version: 1,
+      version: 2,
       machine: {
         id: 'm',
         name: 'Solo máquina',

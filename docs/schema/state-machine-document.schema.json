@@ -6,7 +6,7 @@
   "properties": {
     "version": {
       "type": "number",
-      "const": 1
+      "const": 2
     },
     "machine": {
       "type": "object",
@@ -55,8 +55,15 @@
                   "final"
                 ]
               },
+              "subtitle": {
+                "description": "Texto corto dibujado debajo del nodo",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "description": {
-                "description": "Descripción mostrada debajo del nodo",
+                "description": "Detalle de negocio; no se dibuja, se ve en el inspector",
                 "type": [
                   "string",
                   "null"
@@ -113,6 +120,13 @@
               },
               "action": {
                 "description": "Acción ejecutada al transicionar",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "description": {
+                "description": "Detalle de negocio; no se dibuja, se ve en el inspector",
                 "type": [
                   "string",
                   "null"

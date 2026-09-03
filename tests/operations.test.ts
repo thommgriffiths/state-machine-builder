@@ -111,7 +111,7 @@ describe('addState / addTransition', () => {
 describe('updateState / updateTransition', () => {
   it('actualiza campos y elimina textos vacíos', () => {
     const doc = fixtureDocument();
-    const next = updateState(doc, 'B', { label: 'Bravo', type: 'final', description: '' });
+    const next = updateState(doc, 'B', { label: 'Bravo', type: 'final', subtitle: '', description: '' });
     const state = next.machine.states.find((s) => s.id === 'B');
     expect(state).toEqual({ id: 'B', label: 'Bravo', type: 'final' });
 

@@ -23,6 +23,7 @@ UI reconcilia: posiciona lo que no tiene posición y poda lo que quedó huérfan
 src/
 ├── domain/                 sin dependencias de UI ni de React Flow; 100 % testeable en Node
 │   ├── types.ts            interfaces documentadas (State, Transition, Machine, Layout, Styles, Document)
+│   ├── migrate.ts          migración de versiones del formato (v1 → v2), previa al schema
 │   ├── schema.ts           schema Zod estricto; genera el JSON Schema publicado
 │   ├── validate.ts         validación referencial: IDs, from/to, inicial, huérfanos, lints
 │   ├── operations.ts       operaciones puras e inmutables; lanzan DomainError, nunca ocultan errores
@@ -103,6 +104,40 @@ la forma y se comprueba en compilación que su salida es asignable a esos tipos.
 `z.toJSONSchema` genera `docs/schema/state-machine-document.schema.json`; un
 test falla si el archivo publicado difiere del generado. Los objetos son
 estrictos: un typo en una clave se rechaza en lugar de ignorarse.
+
+### Versionado del formato y migración
+
+`version` describe la forma del documento, y `migrate.ts` la actualiza antes de
+validar. La v2 renombró el `description` de los estados a `subtitle` (el texto
+que se dibuja bajo el nodo) y dejó `description` libre para el detalle de
+negocio, que no se dibuja y ahora también tienen las transiciones.
+
+Migrar en lugar de aceptar las dos formas mantiene el schema estricto y le da a
+los agentes un único contrato vigente. La migración corre sobre el JSON crudo,
+es idempotente, tolera documentos mal formados (de rechazarlos se encarga la
+validación posterior) y devuelve la lista de pasos aplicados para que la UI los
+informe en lugar de corregir en silencio.
+
+**La detección no se basa solo en el número de versión.** Existen documentos
+estampados como v2 que conservan la forma v1: los produjo una recarga en
+caliente durante el desarrollo, que subió la constante de versión antes de que
+la migración existiera, y el autosave estampó "2" sobre un documento cuyos
+estados todavía guardaban el subtítulo en `description`. Mirando solo `version`
+esos documentos quedaban con el texto atrapado en un campo que no se dibuja, y
+el diagrama aparecía sin nada bajo los nodos.
+
+Por eso la migración también reconoce la forma, con una condición conservadora:
+repara solo si **ningún** estado del documento tiene `subtitle`. Si alguno ya lo
+tiene, el documento está en la forma nueva y sus `description` son detalle de
+negocio legítimo que no se toca. Las `description` de las transiciones nunca se
+mueven. Cuando la reparación ocurre al abrir la copia de trabajo, esa copia se
+reescribe ya migrada: si no, el autosave (que solo reacciona a cambios
+posteriores) dejaría la forma vieja en disco y habría que repararla en cada
+carga.
+
+La lección para el futuro: subir la versión de un formato persistido y escribir
+su migración son un mismo cambio, no dos. Separarlos deja una ventana en la que
+lo que se guarda queda mal etiquetado.
 
 ### Reconciliación en lugar de relayout
 

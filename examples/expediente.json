@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "machine": {
     "id": "expediente-sgui",
     "name": "Circuito de expediente (ejemplo inspirado en la imagen de referencia)",
@@ -9,115 +9,115 @@
         "id": "T5069",
         "label": "T5069",
         "type": "normal",
-        "description": "Ingresa el EE"
+        "subtitle": "Ingresa el EE"
       },
       {
         "id": "P01",
         "label": "P01",
         "type": "normal",
-        "description": "Búsqueda de antecedentes (SMP)"
+        "subtitle": "Búsqueda de antecedentes (SMP)"
       },
       {
         "id": "P02",
         "label": "P02",
         "type": "normal",
-        "description": "Vinculación de EE y GEDOs"
+        "subtitle": "Vinculación de EE y GEDOs"
       },
       {
         "id": "P03",
         "label": "P03",
         "type": "normal",
-        "description": "IA analiza checklist"
+        "subtitle": "IA analiza checklist"
       },
       {
         "id": "P04",
         "label": "P04",
         "type": "normal",
-        "description": "Analista valida veredicto"
+        "subtitle": "Analista valida veredicto"
       },
       {
         "id": "T5074",
         "label": "T5074",
         "type": "normal",
-        "description": "Evalúa interconsulta"
+        "subtitle": "Evalúa interconsulta"
       },
       {
         "id": "DGI",
         "label": "DGI",
         "type": "normal",
-        "description": "Interconsulta DGIUR"
+        "subtitle": "Interconsulta DGIUR"
       },
       {
         "id": "T6291",
         "label": "T6291",
         "type": "normal",
-        "description": "Reingresa con antecedentes"
+        "subtitle": "Reingresa con antecedentes"
       },
       {
         "id": "T6289",
         "label": "T6289",
         "type": "normal",
-        "description": "Pase a Catastro"
+        "subtitle": "Pase a Catastro"
       },
       {
         "id": "T6290",
         "label": "T6290",
         "type": "normal",
-        "description": "Catastro vincula antecedentes"
+        "subtitle": "Catastro vincula antecedentes"
       },
       {
         "id": "P06",
         "label": "P06",
         "type": "normal",
-        "description": "Gerente: guarda por antecedentes"
+        "subtitle": "Gerente: guarda por antecedentes"
       },
       {
         "id": "T5071",
         "label": "T5071",
         "type": "normal",
-        "description": "Emite observación y saca el EE"
+        "subtitle": "Emite observación y saca el EE"
       },
       {
         "id": "T5080",
         "label": "T5080",
         "type": "normal",
-        "description": "Continúa sin interconsulta"
+        "subtitle": "Continúa sin interconsulta"
       },
       {
         "id": "T5073",
         "label": "T5073",
         "type": "normal",
-        "description": "Reingresa con la respuesta"
+        "subtitle": "Reingresa con la respuesta"
       },
       {
         "id": "T5072",
         "label": "T5072",
         "type": "normal",
-        "description": "Espera de subsanación"
+        "subtitle": "Espera de subsanación"
       },
       {
         "id": "P07",
         "label": "P07",
         "type": "normal",
-        "description": "Gerente: guarda por documentación"
+        "subtitle": "Gerente: guarda por documentación"
       },
       {
         "id": "P08",
         "label": "P08",
         "type": "normal",
-        "description": "Gerente: destino del vencido"
+        "subtitle": "Gerente: destino del vencido"
       },
       {
         "id": "T5076",
         "label": "T5076",
         "type": "normal",
-        "description": "Registra vencimiento"
+        "subtitle": "Registra vencimiento"
       },
       {
         "id": "FIN",
         "label": "FIN",
         "type": "final",
-        "description": "Expediente cerrado"
+        "subtitle": "Expediente cerrado"
       }
     ],
     "transitions": [

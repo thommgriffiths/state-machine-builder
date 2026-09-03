@@ -12,7 +12,7 @@
  *   (`npm run schema`).
  */
 import { z } from 'zod';
-import { DEFAULT_STYLE_DEFAULTS, type StateMachineDocument } from './types';
+import { DEFAULT_STYLE_DEFAULTS, DOCUMENT_VERSION, type StateMachineDocument } from './types';
 
 export const idSchema = z
   .string()
@@ -33,7 +33,8 @@ export const stateSchema = z.strictObject({
   id: idSchema,
   label: z.string().describe('Nombre corto mostrado dentro del nodo'),
   type: stateTypeSchema.default('normal').describe('"final" marca un estado terminal'),
-  description: optionalText.describe('Descripción mostrada debajo del nodo'),
+  subtitle: optionalText.describe('Texto corto dibujado debajo del nodo'),
+  description: optionalText.describe('Detalle de negocio; no se dibuja, se ve en el inspector'),
 });
 
 export const transitionSchema = z.strictObject({
@@ -44,6 +45,7 @@ export const transitionSchema = z.strictObject({
   event: optionalText.describe('Evento que dispara la transición'),
   condition: optionalText.describe('Condición / guard'),
   action: optionalText.describe('Acción ejecutada al transicionar'),
+  description: optionalText.describe('Detalle de negocio; no se dibuja, se ve en el inspector'),
 });
 
 export const machineSchema = z.strictObject({
@@ -101,7 +103,7 @@ export const stylesSchema = z.strictObject({
 
 export const documentSchema = z
   .strictObject({
-    version: z.literal(1),
+    version: z.literal(DOCUMENT_VERSION),
     machine: machineSchema,
     layout: layoutSchema.prefault({}),
     styles: stylesSchema.prefault({}),

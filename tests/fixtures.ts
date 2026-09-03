@@ -6,14 +6,14 @@ import type { StateMachineDocument } from '../src/domain';
  */
 export function fixtureDocument(): StateMachineDocument {
   return {
-    version: 1,
+    version: 2,
     machine: {
       id: 'fixture',
       name: 'Fixture',
       initialStateId: 'A',
       states: [
         { id: 'A', label: 'A', type: 'normal' },
-        { id: 'B', label: 'B', type: 'normal', description: 'Estado intermedio' },
+        { id: 'B', label: 'B', type: 'normal', subtitle: 'Estado intermedio', description: 'Detalle de negocio de B.' },
         { id: 'C', label: 'C', type: 'final' },
       ],
       transitions: [

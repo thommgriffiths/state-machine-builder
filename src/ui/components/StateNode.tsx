@@ -37,9 +37,9 @@ function StateNodeComponent({ data, selected }: NodeProps<StateFlowNode>) {
           />
         </svg>
       )}
-      {data.description && (
-        <div className="state-node__description" style={{ top: NODE_RADIUS * 2 + RING_PAD + 2 }}>
-          {data.description}
+      {data.subtitle && (
+        <div className="state-node__subtitle" style={{ top: NODE_RADIUS * 2 + RING_PAD + 2 }}>
+          {data.subtitle}
         </div>
       )}
     </div>

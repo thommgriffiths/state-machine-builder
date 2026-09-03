@@ -9,3 +9,4 @@ export * from './serialize';
 export * from './autolayout';
 export * from './document';
 export * from './jsonSchema';
+export * from './migrate';

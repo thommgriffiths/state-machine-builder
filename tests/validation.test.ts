@@ -73,19 +73,19 @@ describe('schema (parseDocumentObject)', () => {
   });
 
   it('rechaza versiones desconocidas y JSON que no es un documento', () => {
-    expect(parseDocumentObject({ version: 2, machine: {} }).ok).toBe(false);
+    expect(parseDocumentObject({ version: 99, machine: {} }).ok).toBe(false);
     expect(parseDocumentObject('hola').ok).toBe(false);
     expect(parseDocumentObject(null).ok).toBe(false);
   });
 
   it('normaliza null y cadenas vacías a ausente', () => {
     const result = parseDocumentObject({
-      version: 1,
+      version: 2,
       machine: {
         id: 'm',
         name: 'n',
         initialStateId: 'a',
-        states: [{ id: 'a', label: 'A', description: null }],
+        states: [{ id: 'a', label: 'A', subtitle: null, description: null }],
         transitions: [{ id: 't', from: 'a', to: 'a', label: '', event: null, condition: null, action: null }],
       },
     });

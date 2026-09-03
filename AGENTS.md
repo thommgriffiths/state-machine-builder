@@ -30,18 +30,18 @@ lo hará y lo informará como "metadata huérfana".
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "machine": {
     "id": "pedido",
     "name": "Ciclo de vida de un pedido",
     "initialStateId": "nuevo",
     "states": [
-      { "id": "nuevo", "label": "Nuevo", "type": "normal", "description": "Pedido creado" },
+      { "id": "nuevo", "label": "Nuevo", "type": "normal", "subtitle": "Pedido creado", "description": "Se crea al confirmar el carrito. Reserva stock por 30 minutos." },
       { "id": "pagado", "label": "Pagado", "type": "normal" },
       { "id": "cancelado", "label": "Cancelado", "type": "final" }
     ],
     "transitions": [
-      { "id": "t-pagar", "from": "nuevo", "to": "pagado", "label": "Pagar", "event": "PAGAR", "condition": null, "action": "registrarPago" },
+      { "id": "t-pagar", "from": "nuevo", "to": "pagado", "label": "Pagar", "event": "PAGAR", "condition": null, "action": "registrarPago", "description": "La pasarela confirma el cobro y se emite la factura." },
       { "id": "t-cancelar", "from": "nuevo", "to": "cancelado", "event": "CANCELAR" }
     ]
   },
@@ -63,14 +63,27 @@ lo hará y lo informará como "metadata huérfana".
 
 - `id`, `name`: identifican la máquina.
 - `initialStateId`: ID de un estado existente. Solo puede ser `null` si no hay estados.
-- `states[]`: `{ id, label, type?, description? }`. `type` es `"normal"` (por defecto) o `"final"`.
+- `states[]`: `{ id, label, type?, subtitle?, description? }`. `type` es `"normal"` (por defecto) o `"final"`.
   Puede haber varios estados finales. El estado inicial **no** se marca con `type`; se define en `initialStateId`.
-- `transitions[]`: `{ id, from, to, label?, event?, condition?, action? }`.
+- `transitions[]`: `{ id, from, to, label?, event?, condition?, action?, description? }`.
   - `from` y `to` son IDs de estados existentes. La flecha siempre apunta a `to`.
   - Toda transición es unidireccional. Una relación en ambos sentidos son **dos transiciones** con IDs distintos.
   - `from === to` es válido (auto-transición; se dibuja como un bucle).
   - `label` es el texto visible; `event`, `condition` (guard) y `action` son propiedades funcionales.
   - `null` y `""` en campos opcionales equivalen a "ausente".
+
+### `subtitle` vs. `description` (no confundirlos)
+
+| Campo | Quién lo tiene | Se dibuja | Para qué |
+| --- | --- | --- | --- |
+| `label` | estados y transiciones | sí | nombre corto: dentro del círculo, o sobre la flecha |
+| `subtitle` | solo estados | sí, debajo del nodo | aclaración de una línea, del largo de un renglón |
+| `description` | estados y transiciones | **no** | el detalle de negocio, tan largo como haga falta |
+
+`description` es el lugar correcto para dejar reglas, criterios, plazos,
+responsables o cualquier explicación extensa: no ensucia el diagrama porque no
+se dibuja, y la persona la lee en la barra lateral al seleccionar el elemento.
+Si el texto tiene que verse en el gráfico, va en `label` o en `subtitle`.
 
 ### `layout` (presentación; opcional)
 
@@ -135,7 +148,7 @@ Errores (el documento no se acepta):
 - `id` vacío o duplicado;
 - transición sin `from` o sin `to`, o que referencia un estado inexistente;
 - `initialStateId` inexistente, o `null` habiendo estados;
-- posiciones no numéricas; `curvature` fuera de `[-1, 1]`; `version` distinta de `1`.
+- posiciones no numéricas; `curvature` fuera de `[-1, 1]`; `version` distinta de `2` (salvo la `1`, que se migra sola).
 
 Advertencias (se aceptan, se muestran, y la reconciliación corrige las de metadata):
 
@@ -160,8 +173,9 @@ npm run validate -- ruta/al/documento.json
 
 ## Cómo consume la UI un documento (para entender qué pasa después)
 
-1. `parseDocumentJson` valida la forma (schema Zod) y las referencias.
-2. `reconcileDocument` asigna posición a los estados sin `layout` (solo a ellos) y elimina metadata huérfana, informando ambas cosas.
-3. El adaptador convierte el documento a nodos y aristas de la librería gráfica; calcula puntos de salida/entrada, curvas y puntas de flecha. Nada de eso se guarda.
+1. Si el documento declara `version: 1`, se migra a la 2 (el `description` de los estados pasa a `subtitle`).
+2. `parseDocumentJson` valida la forma (schema Zod) y las referencias.
+3. `reconcileDocument` asigna posición a los estados sin `layout` (solo a ellos) y elimina metadata huérfana, informando ambas cosas.
+4. El adaptador convierte el documento a nodos y aristas de la librería gráfica; calcula puntos de salida/entrada, curvas y puntas de flecha. Nada de eso se guarda.
 
 Si en el futuro se cambia la librería gráfica, este formato no cambia.

@@ -24,7 +24,12 @@ export interface State {
   label: string;
   /** `final` marca un estado terminal. El estado inicial se define en `Machine.initialStateId`. */
   type: StateType;
-  /** Texto descriptivo opcional (se muestra debajo del nodo). */
+  /** Texto corto que se dibuja debajo del nodo, junto al label. */
+  subtitle?: string;
+  /**
+   * Detalle de negocio del estado, tan largo como haga falta. No se dibuja en
+   * el lienzo: se lee y edita en el inspector.
+   */
   description?: string;
 }
 
@@ -43,6 +48,11 @@ export interface Transition {
   condition?: string;
   /** Acción o función ejecutada al transicionar. */
   action?: string;
+  /**
+   * Detalle de negocio de la transición, tan largo como haga falta. No se
+   * dibuja en el lienzo: se lee y edita en el inspector.
+   */
+  description?: string;
 }
 
 export interface Machine {
@@ -114,7 +124,16 @@ export interface Styles {
 // Documento persistido
 // ---------------------------------------------------------------------------
 
-export const DOCUMENT_VERSION = 1 as const;
+/**
+ * Versión del formato persistido.
+ *
+ *   1 → los estados tenían `description` como texto dibujado bajo el nodo.
+ *   2 → ese texto pasó a llamarse `subtitle`, y `description` es el detalle de
+ *       negocio (no se dibuja) que ahora también tienen las transiciones.
+ *
+ * Los documentos de la versión 1 se migran solos al abrirlos (ver migrate.ts).
+ */
+export const DOCUMENT_VERSION = 2 as const;
 
 export interface StateMachineDocument {
   version: typeof DOCUMENT_VERSION;

@@ -13,7 +13,7 @@ import { computeTransitionGeometry, type TransitionGeometry } from './geometry';
 export interface StateNodeData extends Record<string, unknown> {
   stateId: string;
   label: string;
-  description?: string;
+  subtitle?: string;
   isInitial: boolean;
   isFinal: boolean;
   color: string;
@@ -77,7 +77,7 @@ export function documentToFlow(doc: StateMachineDocument, selection: FlowSelecti
       data: {
         stateId: state.id,
         label: state.label,
-        description: state.description,
+        subtitle: state.subtitle,
         isInitial: machine.initialStateId === state.id,
         isFinal: state.type === 'final',
         color: styles.states[state.id]?.color ?? styles.defaults.stateColor,

@@ -102,6 +102,13 @@ export function loadInitialDocument(): void {
     const result = parseDocumentJson(working.json);
     if (result.ok) {
       store.replaceDocument(result.document, { baseline: working.baseline });
+      if (result.migrations.length > 0) {
+        // La copia de trabajo se reescribe ya migrada: si no, el autosave (que
+        // solo reacciona a cambios posteriores) dejaría la forma vieja en disco
+        // y habría que repararla de nuevo en cada carga.
+        writeWorkingCopy({ json: serializeDocument(result.document), baseline: working.baseline });
+        store.notify('info', 'Documento actualizado de formato. ' + result.migrations.join(' ') + ' Guardá para consolidarlo.');
+      }
       return;
     }
   }

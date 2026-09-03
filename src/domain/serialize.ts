@@ -6,13 +6,21 @@
  * estilos ordenados según machine.states / machine.transitions) para que los
  * diffs sean legibles por humanos y agentes.
  */
+import { migrateDocument } from './migrate';
 import { documentSchema } from './schema';
 import { reconcileDocument, type ReconcileReport } from './reconcile';
 import type { StateMachineDocument } from './types';
 import { hasErrors, validateDocument, type ValidationIssue } from './validate';
 
 export type ParseResult =
-  | { ok: true; document: StateMachineDocument; report: ReconcileReport; warnings: ValidationIssue[] }
+  | {
+      ok: true;
+      document: StateMachineDocument;
+      report: ReconcileReport;
+      warnings: ValidationIssue[];
+      /** Migraciones de versión aplicadas al abrir (vacío si el documento ya estaba al día). */
+      migrations: string[];
+    }
   | { ok: false; issues: ValidationIssue[] };
 
 export function parseDocumentJson(text: string): ParseResult {
@@ -36,7 +44,9 @@ export function parseDocumentJson(text: string): ParseResult {
 }
 
 export function parseDocumentObject(value: unknown): ParseResult {
-  const parsed = documentSchema.safeParse(value);
+  // Primero se actualiza la forma si el documento viene de una versión previa.
+  const migration = migrateDocument(value);
+  const parsed = documentSchema.safeParse(migration.value);
   if (!parsed.success) {
     return {
       ok: false,
@@ -54,7 +64,7 @@ export function parseDocumentObject(value: unknown): ParseResult {
 
   const { document, report } = reconcileDocument(parsed.data);
   const warnings = validateDocument(document).filter((i) => i.severity === 'warning');
-  return { ok: true, document, report, warnings };
+  return { ok: true, document, report, warnings, migrations: migration.applied };
 }
 
 export function serializeDocument(doc: StateMachineDocument): string {
@@ -77,6 +87,7 @@ export function canonicalize(doc: StateMachineDocument): StateMachineDocument {
       initialStateId: doc.machine.initialStateId,
       states: doc.machine.states.map((s) => {
         const out: StateMachineDocument['machine']['states'][number] = { id: s.id, label: s.label, type: s.type };
+        if (s.subtitle) out.subtitle = s.subtitle;
         if (s.description) out.description = s.description;
         return out;
       }),
@@ -86,6 +97,7 @@ export function canonicalize(doc: StateMachineDocument): StateMachineDocument {
         if (t.event) out.event = t.event;
         if (t.condition) out.condition = t.condition;
         if (t.action) out.action = t.action;
+        if (t.description) out.description = t.description;
         return out;
       }),
     },

@@ -32,6 +32,9 @@ function applyParseResult(result: ParseResult, label: string): boolean {
     return false;
   }
   store.replaceDocument(result.document, { baseline: comparableSerialization(result.document) });
+  if (result.migrations.length > 0) {
+    store.notify('info', label + ': documento actualizado de formato. ' + result.migrations.join(' ') + ' Guardá para consolidarlo.');
+  }
   store.notifyReport(result.report);
   if (result.warnings.length > 0) {
     store.notify('info', label + ': ' + result.warnings.length + ' advertencia(s) de validación (ver panel JSON).');
@@ -100,6 +103,7 @@ export function applyJsonText(text: string): ParseResult {
   if (result.ok) {
     const store = useEditorStore.getState();
     store.replaceDocument(result.document, { keepHistory: true });
+    if (result.migrations.length > 0) store.notify('info', result.migrations.join(' '));
     store.notifyReport(result.report);
   }
   return result;

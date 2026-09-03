@@ -103,6 +103,9 @@ export interface AddStateInput {
   id?: string;
   label: string;
   type?: StateType;
+  /** Texto corto dibujado debajo del nodo. */
+  subtitle?: string;
+  /** Detalle de negocio; no se dibuja. */
   description?: string;
   /** Centro del nodo. Si se omite, se calcula una posición automática (solo para este estado). */
   position?: Position;
@@ -113,6 +116,7 @@ export function addState(doc: StateMachineDocument, input: AddStateInput): { doc
   assertIdAvailable(doc, id);
 
   const state: State = { id, label: input.label, type: input.type ?? 'normal' };
+  if (input.subtitle) state.subtitle = input.subtitle;
   if (input.description) state.description = input.description;
 
   const machine: Machine = {
@@ -134,13 +138,15 @@ export function addState(doc: StateMachineDocument, input: AddStateInput): { doc
 export function updateState(
   doc: StateMachineDocument,
   stateId: string,
-  patch: Partial<Pick<State, 'label' | 'type' | 'description'>>,
+  patch: Partial<Pick<State, 'label' | 'type' | 'subtitle' | 'description'>>,
 ): StateMachineDocument {
   requireState(doc, stateId);
   const states = doc.machine.states.map((s) => {
     if (s.id !== stateId) return s;
     const updated: State = { ...s, ...patch };
-    if (!updated.description) delete updated.description;
+    for (const key of ['subtitle', 'description'] as const) {
+      if (!updated[key]) delete updated[key];
+    }
     return updated;
   });
   return withMachine(doc, { ...doc.machine, states });
@@ -229,6 +235,8 @@ export interface AddTransitionInput {
   event?: string;
   condition?: string;
   action?: string;
+  /** Detalle de negocio; no se dibuja. */
+  description?: string;
 }
 
 export function addTransition(
@@ -245,6 +253,7 @@ export function addTransition(
   if (input.event) transition.event = input.event;
   if (input.condition) transition.condition = input.condition;
   if (input.action) transition.action = input.action;
+  if (input.description) transition.description = input.description;
 
   const machine: Machine = { ...doc.machine, transitions: [...doc.machine.transitions, transition] };
   return { document: withMachine(doc, machine), transitionId: id };
@@ -253,7 +262,7 @@ export function addTransition(
 export function updateTransition(
   doc: StateMachineDocument,
   transitionId: string,
-  patch: Partial<Pick<Transition, 'from' | 'to' | 'label' | 'event' | 'condition' | 'action'>>,
+  patch: Partial<Pick<Transition, 'from' | 'to' | 'label' | 'event' | 'condition' | 'action' | 'description'>>,
 ): StateMachineDocument {
   requireTransition(doc, transitionId);
   if (patch.from !== undefined) requireState(doc, patch.from);
@@ -262,7 +271,7 @@ export function updateTransition(
   const transitions = doc.machine.transitions.map((t) => {
     if (t.id !== transitionId) return t;
     const updated: Transition = { ...t, ...patch };
-    for (const key of ['label', 'event', 'condition', 'action'] as const) {
+    for (const key of ['label', 'event', 'condition', 'action', 'description'] as const) {
       if (!updated[key]) delete updated[key];
     }
     return updated;
