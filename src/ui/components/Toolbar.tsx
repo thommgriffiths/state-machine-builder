@@ -1,5 +1,6 @@
 import { useReactFlow } from '@xyflow/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { validateDocument } from '../../domain';
 import { EXAMPLES } from '../../examples';
 import type { StateFlowNode, TransitionFlowEdge } from '../adapter';
 import {
@@ -23,6 +24,11 @@ export function Toolbar() {
   const createState = useEditorStore((s) => s.createState);
   const relayoutAll = useEditorStore((s) => s.relayoutAll);
   const notify = useEditorStore((s) => s.notify);
+  const jsonPanelOpen = useEditorStore((s) => s.jsonPanelOpen);
+  const toggleJsonPanel = useEditorStore((s) => s.toggleJsonPanel);
+  // Sin sombrear `document`: más abajo se usa el global para medir el lienzo.
+  const doc = useEditorStore((s) => s.document);
+  const issueCount = useMemo(() => validateDocument(doc).length, [doc]);
   const dirty = useIsDirty();
   const { fitView, screenToFlowPosition } = useReactFlow<StateFlowNode, TransitionFlowEdge>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +139,18 @@ export function Toolbar() {
         </button>
         <button type="button" className="button" onClick={() => void fitView({ padding: 0.15, duration: 300 })} title="Ajustar la vista al diagrama">
           Ajustar vista
+        </button>
+      </div>
+
+      <div className="toolbar__group">
+        <button
+          type="button"
+          className={'button' + (jsonPanelOpen ? ' is-active' : '')}
+          aria-pressed={jsonPanelOpen}
+          onClick={toggleJsonPanel}
+          title="Ver y editar el JSON del documento completo (deselecciona el elemento actual)"
+        >
+          JSON {issueCount > 0 && <span className="button__badge">{issueCount}</span>}
         </button>
       </div>
     </header>

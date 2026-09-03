@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 export const COLOR_PRESETS: Array<{ name: string; value: string }> = [
   { name: 'Negro', value: '#000000' },
   { name: 'Rojo', value: '#C0392B' },
@@ -27,17 +26,28 @@ export function TextInput({
   onChange,
   placeholder,
   multiline,
+  rows,
   mono,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   multiline?: boolean;
+  /** Alto inicial del textarea, en líneas. Solo aplica con `multiline`. */
+  rows?: number;
   mono?: boolean;
 }) {
   const className = 'input' + (mono ? ' input--mono' : '');
   if (multiline) {
-    return <textarea className={className} value={value} placeholder={placeholder} rows={2} onChange={(e) => onChange(e.target.value)} />;
+    return (
+      <textarea
+        className={className}
+        value={value}
+        placeholder={placeholder}
+        rows={rows ?? 2}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    );
   }
   return <input className={className} type="text" value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
 }

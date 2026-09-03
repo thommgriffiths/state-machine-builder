@@ -122,9 +122,37 @@ code {
   min-height: 0;
 }
 
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--border);
+}
+
+/* Pestañas dentro del inspector: negocio vs. presentación del elemento. */
+.tabs--inspector {
+  margin: 0 0 14px;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tabs--inspector .tab {
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  font-size: 12px;
 }
 
 .tab {
@@ -200,6 +228,28 @@ code {
 .button--small {
   padding: 2px 8px;
   font-size: 12px;
+}
+
+/* Botón de la barra superior que actúa como interruptor (JSON). */
+.button.is-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: #14507f;
+  font-weight: 600;
+}
+
+.button__badge {
+  display: inline-block;
+  min-width: 17px;
+  padding: 0 5px;
+  margin-left: 4px;
+  border-radius: 9px;
+  background: #f0ad4e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 17px;
+  text-align: center;
 }
 
 .link {
@@ -651,7 +701,7 @@ textarea.input {
   overflow: visible;
 }
 
-.state-node__description {
+.state-node__subtitle {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);

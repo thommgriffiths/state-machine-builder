@@ -72,6 +72,12 @@ export interface EditorStore {
   /** Se incrementa cada vez que se carga un documento distinto (para reajustar la vista). */
   loadCounter: number;
   selection: Selection;
+  /**
+   * Qué muestra la barra lateral. El JSON es del documento entero, así que se
+   * abre desde la barra superior y es excluyente con tener algo seleccionado:
+   * abrirlo deselecciona, y seleccionar un elemento lo cierra.
+   */
+  jsonPanelOpen: boolean;
   past: StateMachineDocument[];
   future: StateMachineDocument[];
   lastCoalesceKey: string | null;
@@ -91,6 +97,11 @@ export interface EditorStore {
   selectTransition: (id: string) => void;
   clearSelection: () => void;
 
+  // --- barra lateral ------------------------------------------------------
+  openJsonPanel: () => void;
+  closeJsonPanel: () => void;
+  toggleJsonPanel: () => void;
+
   // --- avisos -------------------------------------------------------------
   notify: (kind: NoticeKind, message: string) => void;
   dismissNotice: (id: number) => void;
@@ -98,13 +109,13 @@ export interface EditorStore {
 
   // --- operaciones de negocio --------------------------------------------
   createState: (input: { label?: string; position?: Position; avoidOverlap?: boolean }) => void;
-  updateStateFields: (id: string, patch: Partial<Pick<State, 'label' | 'type' | 'description'>>, coalesceKey?: string) => void;
+  updateStateFields: (id: string, patch: Partial<Pick<State, 'label' | 'type' | 'subtitle' | 'description'>>, coalesceKey?: string) => void;
   renameState: (oldId: string, newId: string) => boolean;
   makeInitial: (id: string) => void;
   createTransition: (input: { from: string; to: string }) => void;
   updateTransitionFields: (
     id: string,
-    patch: Partial<Pick<Transition, 'from' | 'to' | 'label' | 'event' | 'condition' | 'action'>>,
+    patch: Partial<Pick<Transition, 'from' | 'to' | 'label' | 'event' | 'condition' | 'action' | 'description'>>,
     coalesceKey?: string,
   ) => void;
   renameTransition: (oldId: string, newId: string) => boolean;
@@ -143,6 +154,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   baseline: comparableSerialization(createEmptyDocument()),
   loadCounter: 0,
   selection: EMPTY_SELECTION,
+  jsonPanelOpen: false,
   past: [],
   future: [],
   lastCoalesceKey: null,
@@ -225,14 +237,34 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   setSelection: (selection) => {
     const current = get().selection;
-    if (sameIds(current.stateIds, selection.stateIds) && sameIds(current.transitionIds, selection.transitionIds)) return;
-    set({ selection: sanitizeSelection(get().document, selection) });
+    const sanitized = sanitizeSelection(get().document, selection);
+    const isEmpty = sanitized.stateIds.length === 0 && sanitized.transitionIds.length === 0;
+    // Seleccionar algo devuelve la barra lateral al inspector del elemento.
+    const closesJson = !isEmpty && get().jsonPanelOpen;
+    if (sameIds(current.stateIds, selection.stateIds) && sameIds(current.transitionIds, selection.transitionIds)) {
+      if (closesJson) set({ jsonPanelOpen: false });
+      return;
+    }
+    set(closesJson ? { selection: sanitized, jsonPanelOpen: false } : { selection: sanitized });
   },
   selectState: (id) => get().setSelection({ stateIds: [id], transitionIds: [] }),
   selectTransition: (id) => get().setSelection({ stateIds: [], transitionIds: [id] }),
   clearSelection: () => get().setSelection(EMPTY_SELECTION),
 
+  openJsonPanel: () => {
+    // El JSON es del documento entero: al abrirlo no queda nada seleccionado.
+    set({ jsonPanelOpen: true, selection: EMPTY_SELECTION });
+  },
+  closeJsonPanel: () => set({ jsonPanelOpen: false }),
+  toggleJsonPanel: () => {
+    if (get().jsonPanelOpen) get().closeJsonPanel();
+    else get().openJsonPanel();
+  },
+
   notify: (kind, message) => {
+    // Un mismo aviso ya visible no se apila (StrictMode monta los efectos dos
+    // veces en desarrollo, y repetir el mismo texto solo hace ruido).
+    if (get().notices.some((n) => n.kind === kind && n.message === message)) return;
     noticeCounter += 1;
     const id = noticeCounter;
     set((state) => ({ notices: [...state.notices, { id, kind, message }] }));
