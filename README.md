@@ -97,6 +97,7 @@ npm run validate -- examples/simple.json   # valida archivos JSON desde la termi
 | JSON | Botón "JSON" de la barra superior: el documento completo es global, así que se abre desde ahí y no desde la barra lateral. Abrirlo deselecciona lo que hubiera seleccionado, y volver a seleccionar un elemento lo cierra. Permite ver, editar y aplicar con validación previa; copiar; descargar. El contador naranja son los avisos de validación |
 | Guardar / abrir | "Guardar" persiste en `localStorage` por `machine.id`; "Abrir…" lista guardadas y ejemplos; "Recargar" vuelve a la última versión cargada o guardada. Hay autosave de la copia de trabajo |
 | Importar / exportar | Archivos JSON con el formato de arriba. Un archivo exportado es autocontenido: trae `machine`, `layout` y `styles` juntos |
+| Soltar un archivo | Arrastrar un `.json` sobre el lienzo lo importa. El lienzo se resalta mientras el archivo está encima. Si el archivo no es válido, se informa el error y la máquina abierta queda intacta. Soltarlo fuera del lienzo no hace nada: el navegador tiene bloqueada la navegación al archivo |
 
 ### Versiones del formato
 

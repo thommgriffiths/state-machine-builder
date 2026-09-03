@@ -19,6 +19,22 @@ export function App() {
     return startWorkingCopyAutosave();
   }, []);
 
+  // Si un archivo se suelta fuera del lienzo (la barra lateral, la superior), el
+  // navegador navegaría hacia él y se perdería la sesión. Este guardia lo impide:
+  // solo el lienzo hace algo con el archivo, el resto simplemente lo ignora.
+  useEffect(() => {
+    const carriesFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes('Files');
+    const block = (event: DragEvent) => {
+      if (carriesFiles(event)) event.preventDefault();
+    };
+    window.addEventListener('dragover', block);
+    window.addEventListener('drop', block);
+    return () => {
+      window.removeEventListener('dragover', block);
+      window.removeEventListener('drop', block);
+    };
+  }, []);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const meta = event.metaKey || event.ctrlKey;

@@ -108,6 +108,31 @@ code {
   inset: 0;
 }
 
+/* Soltar un archivo JSON sobre el lienzo para importarlo. */
+.canvas__drop-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* El overlay no debe robar los eventos de arrastre del lienzo. */
+  pointer-events: none;
+  background: rgba(31, 111, 178, 0.08);
+  border: 2px dashed var(--accent);
+  border-radius: 4px;
+}
+
+.canvas__drop-card {
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  color: #14507f;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

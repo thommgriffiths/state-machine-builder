@@ -17,9 +17,10 @@ import {
   type OnBeforeDelete,
   type Viewport,
 } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Position } from '../../domain';
 import { NODE_BOX, documentToFlow, nodePositionToCenter, type StateFlowNode, type TransitionFlowEdge } from '../adapter';
+import { importFromText } from '../store/documentActions';
 import { useEditorStore } from '../store/editorStore';
 import { StateNode } from './StateNode';
 import { TransitionEdge } from './TransitionEdge';
@@ -56,10 +57,13 @@ export function Canvas() {
   const createState = useEditorStore((s) => s.createState);
   const deleteElements = useEditorStore((s) => s.deleteElements);
   const updateViewport = useEditorStore((s) => s.updateViewport);
+  const notify = useEditorStore((s) => s.notify);
 
   const { screenToFlowPosition, fitView, setViewport } = useReactFlow<StateFlowNode, TransitionFlowEdge>();
   const storeApi = useStoreApi();
   const wrapperRef = useRef<HTMLDivElement>(null);
+  /** Resalte mientras se arrastra un archivo por encima del lienzo. */
+  const [fileOver, setFileOver] = useState(false);
 
   const { nodes, edges } = useMemo(
     () =>
@@ -168,8 +172,73 @@ export function Canvas() {
     [updateViewport],
   );
 
+  // --- soltar un archivo sobre el lienzo para importarlo ---------------------
+
+  // Se cuenta enter/leave porque los hijos del lienzo también los disparan y,
+  // sin contador, el resaltado parpadearía al pasar sobre un nodo.
+  const dragDepth = useRef(0);
+
+  const onDragEnter = useCallback((event: React.DragEvent) => {
+    if (!dragCarriesFiles(event)) return;
+    event.preventDefault();
+    dragDepth.current += 1;
+    setFileOver(true);
+  }, []);
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    if (!dragCarriesFiles(event)) return;
+    // Sin preventDefault el navegador no permite soltar aquí.
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const onDragLeave = useCallback((event: React.DragEvent) => {
+    if (!dragCarriesFiles(event)) return;
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setFileOver(false);
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      if (!dragCarriesFiles(event)) return;
+      event.preventDefault();
+      dragDepth.current = 0;
+      setFileOver(false);
+
+      const files = Array.from(event.dataTransfer.files);
+      const file = files[0];
+      if (!file) return;
+      if (!looksLikeJson(file)) {
+        notify('error', 'Solo se pueden importar archivos .json. "' + file.name + '" no lo es.');
+        return;
+      }
+      if (files.length > 1) {
+        notify('info', 'Se soltaron ' + files.length + ' archivos; se importa solo "' + file.name + '".');
+      }
+      void file
+        .text()
+        .then((text) => {
+          if (importFromText(text, 'Importar "' + file.name + '"')) {
+            notify('success', 'Importado "' + file.name + '".');
+          }
+        })
+        .catch((error: unknown) => {
+          notify('error', 'No se pudo leer "' + file.name + '": ' + (error instanceof Error ? error.message : String(error)));
+        });
+    },
+    [notify],
+  );
+
   return (
-    <div className="canvas" ref={wrapperRef} onDoubleClick={onDoubleClick}>
+    <div
+      className={'canvas' + (fileOver ? ' canvas--file-over' : '')}
+      ref={wrapperRef}
+      onDoubleClick={onDoubleClick}
+      onDragEnter={onDragEnter}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
       <ReactFlow<StateFlowNode, TransitionFlowEdge>
         nodes={nodes}
         edges={edges}
@@ -207,6 +276,20 @@ export function Canvas() {
         <Controls showInteractive={false} />
         <MiniMap pannable zoomable nodeColor={(node) => (node.data as { color?: string }).color ?? '#000'} nodeStrokeWidth={0} />
       </ReactFlow>
+      {fileOver && (
+        <div className="canvas__drop-hint">
+          <div className="canvas__drop-card">Soltá el archivo para importar la máquina</div>
+        </div>
+      )}
     </div>
   );
+}
+
+/** ¿El arrastre trae archivos del sistema (y no un nodo del propio lienzo)? */
+function dragCarriesFiles(event: React.DragEvent): boolean {
+  return Array.from(event.dataTransfer.types ?? []).includes('Files');
+}
+
+function looksLikeJson(file: File): boolean {
+  return file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
 }
