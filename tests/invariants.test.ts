@@ -200,6 +200,55 @@ describe('Un estado nuevo sin layout recibe automáticamente una posición', () 
   });
 });
 
+describe('Mover varios estados a la vez preserva la semántica y las distancias relativas', () => {
+  it('aplica el mismo delta a todos los seleccionados y no toca las transiciones', () => {
+    const doc = fixtureDocument();
+    const before = deepClone(doc.machine);
+    const seleccionados = ['A', 'B'];
+    const delta = { x: 250, y: -80 };
+
+    const positions = Object.fromEntries(
+      seleccionados.map((id) => {
+        const p = doc.layout.states[id];
+        if (!p) throw new Error('falta layout de ' + id);
+        return [id, { x: p.x + delta.x, y: p.y + delta.y }];
+      }),
+    );
+    const moved = moveStates(doc, positions);
+
+    // La semántica no se toca en absoluto.
+    expect(moved.machine).toBe(doc.machine);
+    expect(moved.machine).toEqual(before);
+    expect(moved.styles).toBe(doc.styles);
+
+    // Cada estado movido recibió exactamente el mismo desplazamiento...
+    for (const id of seleccionados) {
+      expect(moved.layout.states[id]).toEqual({
+        x: (doc.layout.states[id]?.x ?? 0) + delta.x,
+        y: (doc.layout.states[id]?.y ?? 0) + delta.y,
+      });
+    }
+    // ...y la distancia relativa entre ellos se conserva.
+    const dist = (d: typeof doc, a: string, b: string) =>
+      Math.hypot((d.layout.states[a]?.x ?? 0) - (d.layout.states[b]?.x ?? 0), (d.layout.states[a]?.y ?? 0) - (d.layout.states[b]?.y ?? 0));
+    expect(dist(moved, 'A', 'B')).toBeCloseTo(dist(doc, 'A', 'B'), 9);
+
+    // Los estados no seleccionados se quedan donde estaban.
+    expect(moved.layout.states.C).toEqual(doc.layout.states.C);
+  });
+
+  it('las flechas siguen a todos los estados movidos', () => {
+    const doc = fixtureDocument();
+    const moved = moveStates(doc, { A: { x: -300, y: 900 }, B: { x: 40, y: 950 } });
+    const edge = documentToFlow(moved, noSelection).edges.find((e) => e.id === 't-ab');
+
+    expect(edge?.source).toBe('A');
+    expect(edge?.target).toBe('B');
+    const tip = edge?.data?.geometry.end;
+    expect(Math.hypot((tip?.x ?? 0) - 40, (tip?.y ?? 0) - 950)).toBeCloseTo(NODE_RADIUS, 6);
+  });
+});
+
 describe('Desplazar la cámara no modifica el modelo ni las posiciones de los estados', () => {
   it('setViewport solo toca layout.viewport', () => {
     const doc = fixtureDocument();

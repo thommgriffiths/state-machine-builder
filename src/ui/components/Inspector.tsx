@@ -75,8 +75,9 @@ function MachineInspector() {
         <li>Arrastrar desde el anillo exterior de un estado hasta otro (o el mismo): crear una transición.</li>
         <li>Clic en una flecha o su etiqueta: seleccionarla y editarla aquí.</li>
         <li>Supr / Retroceso: eliminar la selección. Ctrl/Cmd+Z: deshacer.</li>
-        <li>Arrastrar con el botón derecho (o el izquierdo) sobre el lienzo vacío: desplazar la vista.</li>
-        <li>Shift + arrastrar: selección múltiple. Rueda: zoom.</li>
+        <li>Arrastrar con el botón izquierdo sobre el lienzo vacío: región de selección (solo estados).</li>
+        <li>Con varios estados seleccionados, arrastrar uno los mueve a todos manteniendo sus distancias.</li>
+        <li>Arrastrar con el botón derecho sobre el lienzo vacío: desplazar la vista. Rueda: zoom.</li>
       </ul>
     </div>
   );
@@ -346,6 +347,14 @@ function TransitionInspector({ transitionId }: { transitionId: string }) {
 
 // ---------------------------------------------------------------------------
 
+/** "3 estados", "2 transiciones", "3 estados y 2 transiciones" (omite lo que esté en cero). */
+function describeSelection(states: number, transitions: number): string {
+  const parts: string[] = [];
+  if (states > 0) parts.push(states + (states === 1 ? ' estado' : ' estados'));
+  if (transitions > 0) parts.push(transitions + (transitions === 1 ? ' transición' : ' transiciones'));
+  return parts.length > 0 ? parts.join(' y ') : 'Nada seleccionado';
+}
+
 function MultiInspector() {
   const selection = useEditorStore((s) => s.selection);
   const deleteElements = useEditorStore((s) => s.deleteElements);
@@ -353,9 +362,10 @@ function MultiInspector() {
   return (
     <div className="inspector">
       <h2 className="inspector__title">Selección múltiple</h2>
-      <p>
-        {selection.stateIds.length} estado(s) y {selection.transitionIds.length} transición(es).
-      </p>
+      <p>{describeSelection(selection.stateIds.length, selection.transitionIds.length)}.</p>
+      {selection.stateIds.length > 1 && (
+        <p className="muted">Arrastrar cualquiera de ellos mueve a todos, conservando sus distancias.</p>
+      )}
       <div className="inspector__actions">
         <button type="button" className="button button--danger" onClick={() => deleteElements(selection.stateIds, selection.transitionIds)}>
           Eliminar selección

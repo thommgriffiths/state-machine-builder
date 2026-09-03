@@ -5,7 +5,9 @@ import {
   Controls,
   MiniMap,
   ReactFlow,
+  SelectionMode,
   useReactFlow,
+  useStoreApi,
   type Connection,
   type ConnectionLineComponentProps,
   type EdgeChange,
@@ -26,11 +28,13 @@ const nodeTypes: NodeTypes = { state: StateNode };
 const edgeTypes: EdgeTypes = { transition: TransitionEdge };
 
 /**
- * Botones del mouse que arrastran el lienzo: 0 = izquierdo, 2 = derecho.
+ * Botones del mouse que arrastran el lienzo: solo el derecho (2).
+ * El izquierdo queda libre para dibujar la región de selección.
+ *
  * Constante a nivel de módulo a propósito: React Flow reconfigura su motor de
  * pan/zoom cada vez que cambia la identidad de este array.
  */
-const PAN_MOUSE_BUTTONS = [0, 2];
+const PAN_MOUSE_BUTTONS = [2];
 
 function ConnectionLine({ fromX, fromY, toX, toY }: ConnectionLineComponentProps) {
   return (
@@ -54,6 +58,7 @@ export function Canvas() {
   const updateViewport = useEditorStore((s) => s.updateViewport);
 
   const { screenToFlowPosition, fitView, setViewport } = useReactFlow<StateFlowNode, TransitionFlowEdge>();
+  const storeApi = useStoreApi();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const { nodes, edges } = useMemo(
@@ -99,10 +104,20 @@ export function Canvas() {
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange<TransitionFlowEdge>[]) => {
+      // La región de selección es solo para estados. React Flow, además de los
+      // nodos encerrados, marca todas las transiciones incidentes a ellos; esas
+      // altas se descartan mientras la región está activa. Las bajas siempre se
+      // aplican, para que empezar a dibujar la región limpie lo que hubiera.
+      //
+      // Se mira `userSelectionRect` y no `userSelectionActive`: el rect existe
+      // desde el pointerdown y durante todo el gesto, mientras que el flag se
+      // activa recién después de emitir estos cambios (que llegan síncronos).
+      const boxSelecting = storeApi.getState().userSelectionRect !== null;
       let selectionChanged = false;
       const transitionIds = new Set(useEditorStore.getState().selection.transitionIds);
       for (const change of changes) {
         if (change.type === 'select') {
+          if (change.selected && boxSelecting) continue;
           selectionChanged = true;
           if (change.selected) transitionIds.add(change.id);
           else transitionIds.delete(change.id);
@@ -112,7 +127,7 @@ export function Canvas() {
         setSelection({ stateIds: useEditorStore.getState().selection.stateIds, transitionIds: [...transitionIds] });
       }
     },
-    [setSelection],
+    [setSelection, storeApi],
   );
 
   const onConnect = useCallback(
@@ -170,10 +185,15 @@ export function Canvas() {
         connectionMode={ConnectionMode.Loose}
         connectionRadius={NODE_BOX / 2}
         connectionLineComponent={ConnectionLine}
-        // Paneo con botón izquierdo (0) y botón derecho (2) sobre el lienzo vacío.
-        // Incluir el 2 hace además que React Flow suprima el menú contextual nativo
-        // del lienzo, para que arrastrar con el derecho no lo dispare.
+        // Paneo solo con el botón derecho sobre el lienzo vacío. Pasar el botón 2
+        // hace además que React Flow suprima el menú contextual nativo del lienzo.
         panOnDrag={PAN_MOUSE_BUTTONS}
+        // El botón izquierdo sobre el lienzo vacío dibuja la región de selección.
+        // React Flow solo la inicia si el gesto empieza en el lienzo (no en un nodo)
+        // y con el botón 0, así que no compite con arrastrar nodos ni con el paneo.
+        selectionOnDrag
+        // Basta con que la región toque un estado para seleccionarlo.
+        selectionMode={SelectionMode.Partial}
         zoomOnDoubleClick={false}
         minZoom={0.15}
         maxZoom={3}
