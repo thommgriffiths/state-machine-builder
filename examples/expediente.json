@@ -1,0 +1,444 @@
+{
+  "version": 1,
+  "machine": {
+    "id": "expediente-sgui",
+    "name": "Circuito de expediente (ejemplo inspirado en la imagen de referencia)",
+    "initialStateId": "T5069",
+    "states": [
+      {
+        "id": "T5069",
+        "label": "T5069",
+        "type": "normal",
+        "description": "Ingresa el EE"
+      },
+      {
+        "id": "P01",
+        "label": "P01",
+        "type": "normal",
+        "description": "Búsqueda de antecedentes (SMP)"
+      },
+      {
+        "id": "P02",
+        "label": "P02",
+        "type": "normal",
+        "description": "Vinculación de EE y GEDOs"
+      },
+      {
+        "id": "P03",
+        "label": "P03",
+        "type": "normal",
+        "description": "IA analiza checklist"
+      },
+      {
+        "id": "P04",
+        "label": "P04",
+        "type": "normal",
+        "description": "Analista valida veredicto"
+      },
+      {
+        "id": "T5074",
+        "label": "T5074",
+        "type": "normal",
+        "description": "Evalúa interconsulta"
+      },
+      {
+        "id": "DGI",
+        "label": "DGI",
+        "type": "normal",
+        "description": "Interconsulta DGIUR"
+      },
+      {
+        "id": "T6291",
+        "label": "T6291",
+        "type": "normal",
+        "description": "Reingresa con antecedentes"
+      },
+      {
+        "id": "T6289",
+        "label": "T6289",
+        "type": "normal",
+        "description": "Pase a Catastro"
+      },
+      {
+        "id": "T6290",
+        "label": "T6290",
+        "type": "normal",
+        "description": "Catastro vincula antecedentes"
+      },
+      {
+        "id": "P06",
+        "label": "P06",
+        "type": "normal",
+        "description": "Gerente: guarda por antecedentes"
+      },
+      {
+        "id": "T5071",
+        "label": "T5071",
+        "type": "normal",
+        "description": "Emite observación y saca el EE"
+      },
+      {
+        "id": "T5080",
+        "label": "T5080",
+        "type": "normal",
+        "description": "Continúa sin interconsulta"
+      },
+      {
+        "id": "T5073",
+        "label": "T5073",
+        "type": "normal",
+        "description": "Reingresa con la respuesta"
+      },
+      {
+        "id": "T5072",
+        "label": "T5072",
+        "type": "normal",
+        "description": "Espera de subsanación"
+      },
+      {
+        "id": "P07",
+        "label": "P07",
+        "type": "normal",
+        "description": "Gerente: guarda por documentación"
+      },
+      {
+        "id": "P08",
+        "label": "P08",
+        "type": "normal",
+        "description": "Gerente: destino del vencido"
+      },
+      {
+        "id": "T5076",
+        "label": "T5076",
+        "type": "normal",
+        "description": "Registra vencimiento"
+      },
+      {
+        "id": "FIN",
+        "label": "FIN",
+        "type": "final",
+        "description": "Expediente cerrado"
+      }
+    ],
+    "transitions": [
+      {
+        "id": "t-ingreso",
+        "from": "T5069",
+        "to": "P01",
+        "event": "EE.ingresoBuzon",
+        "condition": "sector destino = SGUI"
+      },
+      {
+        "id": "t-p01-p02",
+        "from": "P01",
+        "to": "P02",
+        "condition": "hay antec. RLM"
+      },
+      {
+        "id": "t-p01-t6289",
+        "from": "P01",
+        "to": "T6289",
+        "condition": "sin antec. RLM"
+      },
+      {
+        "id": "t-t6289-t6290",
+        "from": "T6289",
+        "to": "T6290",
+        "label": "pase buzón RLM"
+      },
+      {
+        "id": "t-t6290-t6291",
+        "from": "T6290",
+        "to": "T6291",
+        "event": "ingresoBuzon(RLM)"
+      },
+      {
+        "id": "t-t6291-p01",
+        "from": "T6291",
+        "to": "P01"
+      },
+      {
+        "id": "t-p02-p03",
+        "from": "P02",
+        "to": "P03",
+        "condition": "compatibles"
+      },
+      {
+        "id": "t-p02-p06",
+        "from": "P02",
+        "to": "P06",
+        "label": "incompatibles"
+      },
+      {
+        "id": "t-p06-p03",
+        "from": "P06",
+        "to": "P03",
+        "label": "rechaza"
+      },
+      {
+        "id": "t-p06-p08",
+        "from": "P06",
+        "to": "P08",
+        "label": "convalida"
+      },
+      {
+        "id": "t-p03-p04",
+        "from": "P03",
+        "to": "P04",
+        "label": "veredicto propuesto"
+      },
+      {
+        "id": "t-p04-t5074",
+        "from": "P04",
+        "to": "T5074",
+        "condition": "ADMISIBLE"
+      },
+      {
+        "id": "t-p04-t5071",
+        "from": "P04",
+        "to": "T5071",
+        "condition": "SUBSANABLE"
+      },
+      {
+        "id": "t-p04-p07",
+        "from": "P04",
+        "to": "P07",
+        "condition": "INSALVABLE"
+      },
+      {
+        "id": "t-t5071-t5072",
+        "from": "T5071",
+        "to": "T5072"
+      },
+      {
+        "id": "t-t5072-t5073",
+        "from": "T5072",
+        "to": "T5073",
+        "label": "responde en plazo"
+      },
+      {
+        "id": "t-t5073-p03",
+        "from": "T5073",
+        "to": "P03",
+        "label": "re-revisión (iterable)"
+      },
+      {
+        "id": "t-t5072-t5076",
+        "from": "T5072",
+        "to": "T5076",
+        "label": "expiró el plazo"
+      },
+      {
+        "id": "t-t5072-p08",
+        "from": "T5072",
+        "to": "P08",
+        "label": "se cancela"
+      },
+      {
+        "id": "t-t5076-p08",
+        "from": "T5076",
+        "to": "P08"
+      },
+      {
+        "id": "t-p07-p03",
+        "from": "P07",
+        "to": "P03",
+        "label": "rechaza"
+      },
+      {
+        "id": "t-p07-fin",
+        "from": "P07",
+        "to": "FIN",
+        "label": "convalida"
+      },
+      {
+        "id": "t-t5074-t5080",
+        "from": "T5074",
+        "to": "T5080",
+        "condition": "no requiere"
+      },
+      {
+        "id": "t-t5074-dgi",
+        "from": "T5074",
+        "to": "DGI",
+        "condition": "requiere DGIUR"
+      },
+      {
+        "id": "t-dgi-p03",
+        "from": "DGI",
+        "to": "P03",
+        "label": "vuelve con dictamen"
+      },
+      {
+        "id": "t-t5080-fin",
+        "from": "T5080",
+        "to": "FIN"
+      },
+      {
+        "id": "t-p08-fin",
+        "from": "P08",
+        "to": "FIN",
+        "label": "[RETOMA]"
+      }
+    ]
+  },
+  "layout": {
+    "states": {
+      "T5069": {
+        "x": 120,
+        "y": 150
+      },
+      "P01": {
+        "x": 350,
+        "y": 150
+      },
+      "P02": {
+        "x": 580,
+        "y": 150
+      },
+      "P03": {
+        "x": 830,
+        "y": 150
+      },
+      "P04": {
+        "x": 1040,
+        "y": 150
+      },
+      "T5074": {
+        "x": 1270,
+        "y": 150
+      },
+      "DGI": {
+        "x": 1490,
+        "y": 150
+      },
+      "T6291": {
+        "x": 170,
+        "y": 340
+      },
+      "T6289": {
+        "x": 530,
+        "y": 340
+      },
+      "T6290": {
+        "x": 350,
+        "y": 500
+      },
+      "P06": {
+        "x": 680,
+        "y": 400
+      },
+      "T5071": {
+        "x": 1040,
+        "y": 400
+      },
+      "T5080": {
+        "x": 1270,
+        "y": 400
+      },
+      "T5073": {
+        "x": 910,
+        "y": 550
+      },
+      "T5072": {
+        "x": 1040,
+        "y": 660
+      },
+      "P07": {
+        "x": 1270,
+        "y": 660
+      },
+      "P08": {
+        "x": 810,
+        "y": 890
+      },
+      "T5076": {
+        "x": 1040,
+        "y": 890
+      },
+      "FIN": {
+        "x": 1490,
+        "y": 660
+      }
+    }
+  },
+  "styles": {
+    "defaults": {
+      "stateColor": "#000000",
+      "transitionColor": "#000000"
+    },
+    "states": {
+      "FIN": {
+        "color": "#2E7D32"
+      }
+    },
+    "transitions": {
+      "t-ingreso": {
+        "color": "#1F6FB2"
+      },
+      "t-t6290-t6291": {
+        "color": "#1F6FB2",
+        "curvature": 0.3
+      },
+      "t-t6291-p01": {
+        "curvature": 0.3
+      },
+      "t-p01-t6289": {
+        "curvature": -0.25
+      },
+      "t-t6289-t6290": {
+        "curvature": 0.25
+      },
+      "t-p02-p06": {
+        "color": "#C0392B",
+        "lineStyle": "dashed"
+      },
+      "t-p06-p03": {
+        "color": "#C0392B",
+        "curvature": 0.2
+      },
+      "t-p06-p08": {
+        "color": "#C0392B"
+      },
+      "t-p04-t5074": {
+        "color": "#C0392B"
+      },
+      "t-p04-t5071": {
+        "color": "#C0392B"
+      },
+      "t-p04-p07": {
+        "color": "#C0392B",
+        "curvature": 0.2
+      },
+      "t-t5072-t5073": {
+        "color": "#1F6FB2",
+        "curvature": 0.25
+      },
+      "t-t5073-p03": {
+        "curvature": 0.3
+      },
+      "t-t5072-t5076": {
+        "color": "#2E7D32",
+        "lineStyle": "dashed"
+      },
+      "t-t5072-p08": {
+        "color": "#1F6FB2",
+        "curvature": -0.2
+      },
+      "t-p07-p03": {
+        "color": "#C0392B",
+        "curvature": 0.35
+      },
+      "t-p07-fin": {
+        "color": "#C0392B"
+      },
+      "t-dgi-p03": {
+        "curvature": -0.4
+      },
+      "t-p08-fin": {
+        "color": "#C0392B",
+        "curvature": -0.25
+      }
+    }
+  }
+}

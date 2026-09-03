@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "machine": {
+    "id": "pedido",
+    "name": "Ciclo de vida de un pedido (sin layout: la UI posiciona todo)",
+    "initialStateId": "nuevo",
+    "states": [
+      { "id": "nuevo", "label": "Nuevo", "description": "Pedido creado por el cliente" },
+      { "id": "pagado", "label": "Pagado", "description": "Pago confirmado por la pasarela" },
+      { "id": "preparando", "label": "Preparando", "description": "Depósito arma el paquete" },
+      { "id": "enviado", "label": "Enviado", "description": "Entregado al correo" },
+      { "id": "entregado", "label": "Entregado", "type": "final" },
+      { "id": "cancelado", "label": "Cancelado", "type": "final" }
+    ],
+    "transitions": [
+      { "id": "t-pagar", "from": "nuevo", "to": "pagado", "event": "PAGAR", "action": "registrarPago" },
+      { "id": "t-cancelar-nuevo", "from": "nuevo", "to": "cancelado", "event": "CANCELAR" },
+      { "id": "t-preparar", "from": "pagado", "to": "preparando", "event": "PREPARAR", "condition": "hayStock" },
+      { "id": "t-cancelar-pagado", "from": "pagado", "to": "cancelado", "event": "CANCELAR", "condition": "dentroDePlazo", "action": "reembolsar" },
+      { "id": "t-enviar", "from": "preparando", "to": "enviado", "event": "DESPACHAR", "action": "notificarCliente" },
+      { "id": "t-entregar", "from": "enviado", "to": "entregado", "event": "CONFIRMAR_ENTREGA" },
+      { "id": "t-reintentar", "from": "enviado", "to": "enviado", "event": "REINTENTAR_ENTREGA", "condition": "intentos < 3" }
+    ]
+  }
+}

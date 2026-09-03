@@ -1,0 +1,280 @@
+{
+  "$id": "https://example.com/state-machine-document.schema.json",
+  "title": "StateMachineDocument",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "machine": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identificador estable y único dentro del documento"
+        },
+        "name": {
+          "type": "string"
+        },
+        "initialStateId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "description": "Identificador estable y único dentro del documento"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "ID del estado inicial (null solo si no hay estados)"
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Identificador estable y único dentro del documento"
+              },
+              "label": {
+                "type": "string",
+                "description": "Nombre corto mostrado dentro del nodo"
+              },
+              "type": {
+                "default": "normal",
+                "description": "\"final\" marca un estado terminal",
+                "type": "string",
+                "enum": [
+                  "normal",
+                  "final"
+                ]
+              },
+              "description": {
+                "description": "Descripción mostrada debajo del nodo",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Identificador estable y único dentro del documento"
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ID del estado origen"
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ID del estado destino (la flecha apunta aquí)"
+              },
+              "label": {
+                "description": "Etiqueta visible",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "event": {
+                "description": "Evento que dispara la transición",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "condition": {
+                "description": "Condición / guard",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "action": {
+                "description": "Acción ejecutada al transicionar",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "initialStateId",
+        "states",
+        "transitions"
+      ],
+      "additionalProperties": false
+    },
+    "layout": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "states": {
+          "default": {},
+          "description": "Centro de cada estado, indexado por ID de estado",
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Identificador estable y único dentro del documento"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "viewport": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "zoom": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "zoom"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "styles": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "defaults": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "stateColor": {
+              "default": "#000000",
+              "type": "string",
+              "minLength": 1,
+              "description": "Color CSS (preferentemente hexadecimal). Solo presentación."
+            },
+            "transitionColor": {
+              "default": "#000000",
+              "type": "string",
+              "minLength": 1,
+              "description": "Color CSS (preferentemente hexadecimal). Solo presentación."
+            }
+          },
+          "additionalProperties": false
+        },
+        "states": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Identificador estable y único dentro del documento"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "color": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Color CSS (preferentemente hexadecimal). Solo presentación."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "transitions": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Identificador estable y único dentro del documento"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "color": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Color CSS (preferentemente hexadecimal). Solo presentación."
+              },
+              "curvature": {
+                "description": "Curvatura en [-1, 1]; 0 = recta; ausente = automática",
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1
+              },
+              "lineStyle": {
+                "type": "string",
+                "enum": [
+                  "solid",
+                  "dashed"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "machine"
+  ],
+  "additionalProperties": false,
+  "description": "Documento de máquina de estados: machine (semántica) + layout + styles"
+}

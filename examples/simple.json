@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "machine": {
+    "id": "example-machine",
+    "name": "Proceso de ejemplo",
+    "initialStateId": "state-A",
+    "states": [
+      { "id": "state-A", "label": "Ingreso", "type": "normal" },
+      { "id": "state-B", "label": "Análisis", "type": "normal" },
+      { "id": "state-C", "label": "Finalizado", "type": "final" }
+    ],
+    "transitions": [
+      {
+        "id": "transition-A-B",
+        "from": "state-A",
+        "to": "state-B",
+        "label": "Analizar",
+        "event": "ANALYZE",
+        "condition": null,
+        "action": null
+      },
+      {
+        "id": "transition-B-C",
+        "from": "state-B",
+        "to": "state-C",
+        "label": "Aprobado",
+        "event": "APPROVE",
+        "condition": "isValid",
+        "action": null
+      }
+    ]
+  },
+  "layout": {
+    "states": {
+      "state-A": { "x": 150, "y": 300 },
+      "state-B": { "x": 450, "y": 300 },
+      "state-C": { "x": 750, "y": 300 }
+    }
+  },
+  "styles": {
+    "defaults": { "stateColor": "#000000", "transitionColor": "#000000" },
+    "states": {
+      "state-A": { "color": "#000000" }
+    },
+    "transitions": {
+      "transition-A-B": { "color": "#000000", "curvature": 0 },
+      "transition-B-C": { "color": "#D32F2F", "curvature": 0.25 }
+    }
+  }
+}
