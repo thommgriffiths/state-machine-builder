@@ -84,6 +84,7 @@ npm run validate -- examples/simple.json   # valida archivos JSON desde la termi
 | Editar estado / transición | Clic para seleccionar; el panel "Propiedades" permite editar id, etiqueta, descripción, tipo, inicial, `from`/`to`, evento, condición, acción, color, curvatura y estilo de línea |
 | Eliminar | Supr / Retroceso con la selección, o botón "Eliminar" en el inspector. Eliminar un estado elimina sus transiciones; el estado inicial no puede eliminarse hasta marcar otro |
 | Curvatura | Slider, botones −/+, "Recta" o "Auto" en el inspector de la transición |
+| Desplazar la vista | Arrastrar con el botón derecho o el izquierdo sobre el lienzo vacío. El menú contextual del navegador queda suprimido sobre el lienzo. Solo cambia la cámara: ni el modelo ni las posiciones de los estados se tocan |
 | Deshacer / rehacer | Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z |
 | Reorganizar todo | Botón "Reorganizar" (auto-layout con Dagre). Es la única operación que mueve todos los estados, requiere confirmación y se puede deshacer |
 | JSON | Pestaña "JSON": ver, editar y aplicar el documento con validación previa; copiar; descargar |

@@ -75,6 +75,7 @@ function MachineInspector() {
         <li>Arrastrar desde el anillo exterior de un estado hasta otro (o el mismo): crear una transición.</li>
         <li>Clic en una flecha o su etiqueta: seleccionarla y editarla aquí.</li>
         <li>Supr / Retroceso: eliminar la selección. Ctrl/Cmd+Z: deshacer.</li>
+        <li>Arrastrar con el botón derecho (o el izquierdo) sobre el lienzo vacío: desplazar la vista.</li>
         <li>Shift + arrastrar: selección múltiple. Rueda: zoom.</li>
       </ul>
     </div>

@@ -11,6 +11,7 @@ import {
   reconcileDocument,
   removeTransition,
   setTransitionStyle,
+  setViewport,
   validateDocument,
   parseDocumentObject,
 } from '../src/domain';
@@ -196,6 +197,29 @@ describe('Un estado nuevo sin layout recibe automáticamente una posición', () 
     expect(result.document.layout.states.s2).toBeDefined();
     expect(result.document.styles.defaults).toEqual({ stateColor: '#000000', transitionColor: '#000000' });
     expect(result.document.machine.transitions[0]).toEqual({ id: 't1', from: 's1', to: 's2', event: 'NEXT' });
+  });
+});
+
+describe('Desplazar la cámara no modifica el modelo ni las posiciones de los estados', () => {
+  it('setViewport solo toca layout.viewport', () => {
+    const doc = fixtureDocument();
+    const snapshot = deepClone(doc);
+    const panned = setViewport(doc, { x: -640, y: 220, zoom: 1.75 });
+
+    expect(panned.layout.viewport).toEqual({ x: -640, y: 220, zoom: 1.75 });
+    // La semántica, las coordenadas de los estados y los estilos quedan intactos.
+    expect(panned.machine).toBe(doc.machine);
+    expect(panned.layout.states).toBe(doc.layout.states);
+    expect(panned.styles).toBe(doc.styles);
+    expect(doc).toEqual(snapshot);
+  });
+
+  it('quitar el viewport tampoco toca nada más', () => {
+    const doc = setViewport(fixtureDocument(), { x: 10, y: 20, zoom: 2 });
+    const cleared = setViewport(doc, undefined);
+    expect(cleared.layout.viewport).toBeUndefined();
+    expect(cleared.layout.states).toEqual(fixtureDocument().layout.states);
+    expect(cleared.machine).toBe(doc.machine);
   });
 });
 

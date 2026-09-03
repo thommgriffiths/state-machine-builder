@@ -25,6 +25,13 @@ import { TransitionEdge } from './TransitionEdge';
 const nodeTypes: NodeTypes = { state: StateNode };
 const edgeTypes: EdgeTypes = { transition: TransitionEdge };
 
+/**
+ * Botones del mouse que arrastran el lienzo: 0 = izquierdo, 2 = derecho.
+ * Constante a nivel de módulo a propósito: React Flow reconfigura su motor de
+ * pan/zoom cada vez que cambia la identidad de este array.
+ */
+const PAN_MOUSE_BUTTONS = [0, 2];
+
 function ConnectionLine({ fromX, fromY, toX, toY }: ConnectionLineComponentProps) {
   return (
     <g className="connection-line">
@@ -163,6 +170,10 @@ export function Canvas() {
         connectionMode={ConnectionMode.Loose}
         connectionRadius={NODE_BOX / 2}
         connectionLineComponent={ConnectionLine}
+        // Paneo con botón izquierdo (0) y botón derecho (2) sobre el lienzo vacío.
+        // Incluir el 2 hace además que React Flow suprima el menú contextual nativo
+        // del lienzo, para que arrastrar con el derecho no lo dispare.
+        panOnDrag={PAN_MOUSE_BUTTONS}
         zoomOnDoubleClick={false}
         minZoom={0.15}
         maxZoom={3}
