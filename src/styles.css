@@ -376,6 +376,25 @@ textarea.input {
   font-size: 15px;
 }
 
+.id-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin: -6px 0 12px;
+  color: var(--muted);
+}
+
+.id-readout__label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.id-readout code {
+  color: var(--text);
+  user-select: all;
+}
+
 .inspector__subtitle {
   margin: 18px 0 8px;
   font-size: 12px;

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { validateDocument, type State, type Transition } from '../../domain';
 import { resolveCurvatures } from '../adapter';
 import { useEditorStore } from '../store/editorStore';
-import { ColorInput, CurvatureInput, Field, IdInput, TextInput } from './fields';
+import { ColorInput, CurvatureInput, Field, TextInput } from './fields';
 import { ValidationList } from './ValidationList';
 
 /**
@@ -26,6 +26,21 @@ export function Inspector() {
   }
   if (stateCount + transitionCount > 1) return <MultiInspector />;
   return <MachineInspector />;
+}
+
+/**
+ * El id es identidad interna, generada automáticamente: se muestra para poder
+ * referenciarlo (al hablar con un agente, al editar el JSON) pero no se ofrece
+ * como campo editable, porque cambiarlo no aporta nada al usuario y sí invita a
+ * confundirlo con el nombre. Su única exigencia es ser único en el documento.
+ */
+function IdReadout({ id }: { id: string }) {
+  return (
+    <p className="id-readout" title="Identificador automático, único en el documento">
+      <span className="id-readout__label">ID</span>
+      <code>{id}</code>
+    </p>
+  );
 }
 
 function ElementTabs({ tab, onTabChange }: { tab: ElementTab; onTabChange: (tab: ElementTab) => void }) {
@@ -123,7 +138,6 @@ function MachineInspector() {
 function StateInspector({ stateId, tab, onTabChange }: { stateId: string; tab: ElementTab; onTabChange: (tab: ElementTab) => void }) {
   const document = useEditorStore((s) => s.document);
   const updateStateFields = useEditorStore((s) => s.updateStateFields);
-  const renameState = useEditorStore((s) => s.renameState);
   const makeInitial = useEditorStore((s) => s.makeInitial);
   const styleState = useEditorStore((s) => s.styleState);
   const createTransition = useEditorStore((s) => s.createTransition);
@@ -144,13 +158,11 @@ function StateInspector({ stateId, tab, onTabChange }: { stateId: string; tab: E
       <h2 className="inspector__title">
         Estado {isInitial && <span className="badge">inicial</span>} {state.type === 'final' && <span className="badge">final</span>}
       </h2>
+      <IdReadout id={state.id} />
       <ElementTabs tab={tab} onTabChange={onTabChange} />
 
       {tab === 'negocio' ? (
         <>
-          <Field label="ID" hint="(Enter para aplicar; se propaga a transiciones, layout y estilos)">
-            <IdInput value={state.id} onCommit={(next) => renameState(state.id, next)} />
-          </Field>
           <Field label="Etiqueta" hint="(dentro del círculo)">
             <TextInput value={state.label} onChange={(v) => updateStateFields(stateId, { label: v }, 'state.label:' + stateId)} />
           </Field>
@@ -297,7 +309,6 @@ function TransitionInspector({
 }) {
   const document = useEditorStore((s) => s.document);
   const updateTransitionFields = useEditorStore((s) => s.updateTransitionFields);
-  const renameTransition = useEditorStore((s) => s.renameTransition);
   const styleTransition = useEditorStore((s) => s.styleTransition);
   const deleteElements = useEditorStore((s) => s.deleteElements);
   const selectState = useEditorStore((s) => s.selectState);
@@ -312,13 +323,11 @@ function TransitionInspector({
   return (
     <div className="inspector">
       <h2 className="inspector__title">Transición</h2>
+      <IdReadout id={transition.id} />
       <ElementTabs tab={tab} onTabChange={onTabChange} />
 
       {tab === 'negocio' ? (
         <>
-          <Field label="ID" hint="(Enter para aplicar)">
-            <IdInput value={transition.id} onCommit={(next) => renameTransition(transition.id, next)} />
-          </Field>
           <div className="field-row">
             <Field label="Origen (from)">
               <select className="input" value={transition.from} onChange={(e) => updateTransitionFields(transitionId, { from: e.target.value })}>

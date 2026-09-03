@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+
 export const COLOR_PRESETS: Array<{ name: string; value: string }> = [
   { name: 'Negro', value: '#000000' },
   { name: 'Rojo', value: '#C0392B' },
@@ -50,36 +50,6 @@ export function TextInput({
     );
   }
   return <input className={className} type="text" value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
-}
-
-/**
- * Campo de ID: edita localmente y aplica al confirmar (Enter o blur). Si el
- * cambio se rechaza (duplicado, vacío) vuelve al valor actual.
- */
-export function IdInput({ value, onCommit }: { value: string; onCommit: (next: string) => boolean }) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-
-  const commit = () => {
-    const next = draft.trim();
-    if (next === value) return;
-    if (!onCommit(next)) setDraft(value);
-  };
-
-  return (
-    <input
-      className="input input--mono"
-      type="text"
-      value={draft}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-        if (e.key === 'Escape') setDraft(value);
-      }}
-      spellCheck={false}
-    />
-  );
 }
 
 export function ColorInput({

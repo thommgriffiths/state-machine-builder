@@ -86,7 +86,8 @@ npm run validate -- examples/simple.json   # valida archivos JSON desde la termi
 | Crear un estado | Doble clic en el lienzo, o botón "+ Estado" |
 | Mover un estado | Arrastrar el círculo (solo cambia `layout`) |
 | Crear una transición | Arrastrar desde el anillo exterior de un estado hasta otro (o el mismo, para un bucle); o desde el inspector del estado, "Nueva transición hacia…" |
-| Editar estado / transición | Clic para seleccionar. La barra lateral queda reservada al elemento seleccionado y separa sus propiedades en dos pestañas: **Negocio** (id, etiqueta, subtítulo, descripción, tipo, inicial, `from`/`to`, evento, condición, acción) y **Estilo** (color, curvatura, estilo de línea, y la posición de layout) |
+| Editar estado / transición | Clic para seleccionar. La barra lateral queda reservada al elemento seleccionado y separa sus propiedades en dos pestañas: **Negocio** (etiqueta, subtítulo, descripción, tipo, inicial, `from`/`to`, evento, condición, acción) y **Estilo** (color, curvatura, estilo de línea, y la posición de layout) |
+| IDs | Se generan solos (`state-N`, `transition-N`) y son únicos en todo el documento. El inspector los muestra pero no deja editarlos: son identidad interna, no un nombre. Para cambiar uno, editá el JSON |
 | Eliminar | Supr / Retroceso con la selección, o botón "Eliminar" en el inspector. Eliminar un estado elimina sus transiciones; el estado inicial no puede eliminarse hasta marcar otro |
 | Curvatura | Slider, botones −/+, "Recta" o "Auto" en el inspector de la transición |
 | Seleccionar varios estados | Arrastrar con el botón izquierdo sobre el lienzo vacío para dibujar una región. Alcanza con que toque un estado. La región selecciona **solo estados**, nunca transiciones |

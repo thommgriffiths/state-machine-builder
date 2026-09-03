@@ -13,12 +13,11 @@ import {
   applyLayout,
   computeAutoLayout,
   findFreeSpot,
+  generateId,
   DEFAULT_PLACEMENT_OPTIONS,
   moveStates,
   removeStates,
   removeTransitions,
-  renameStateId,
-  renameTransitionId,
   serializeDocument,
   setInitialState,
   setStateStyle,
@@ -110,7 +109,6 @@ export interface EditorStore {
   // --- operaciones de negocio --------------------------------------------
   createState: (input: { label?: string; position?: Position; avoidOverlap?: boolean }) => void;
   updateStateFields: (id: string, patch: Partial<Pick<State, 'label' | 'type' | 'subtitle' | 'description'>>, coalesceKey?: string) => void;
-  renameState: (oldId: string, newId: string) => boolean;
   makeInitial: (id: string) => void;
   createTransition: (input: { from: string; to: string }) => void;
   updateTransitionFields: (
@@ -118,7 +116,6 @@ export interface EditorStore {
     patch: Partial<Pick<Transition, 'from' | 'to' | 'label' | 'event' | 'condition' | 'action' | 'description'>>,
     coalesceKey?: string,
   ) => void;
-  renameTransition: (oldId: string, newId: string) => boolean;
   deleteElements: (stateIds: string[], transitionIds: string[]) => void;
   updateMachine: (patch: { id?: string; name?: string }, coalesceKey?: string) => void;
 
@@ -290,7 +287,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       if (target && avoidOverlap) {
         target = findFreeSpot(target, Object.values(doc.layout.states), DEFAULT_PLACEMENT_OPTIONS);
       }
-      const result = addState(doc, { label: label ?? 'Estado ' + (doc.machine.states.length + 1), position: target });
+      // El id se genera primero para que la etiqueta por defecto lleve el mismo
+      // número. Contarlos por separado los desincroniza en cuanto se borra un
+      // estado del medio: quedaba "state-6" etiquetado "Estado 5".
+      const id = generateId(doc, 'state');
+      const result = addState(doc, { id, label: label ?? 'Estado ' + id.replace(/^state-/, ''), position: target });
       created = result.stateId;
       return result.document;
     });
@@ -299,12 +300,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   updateStateFields: (id, patch, coalesceKey) => {
     get().commit((doc) => updateState(doc, id, patch), { coalesceKey });
-  },
-
-  renameState: (oldId, newId) => {
-    const ok = get().commit((doc) => renameStateId(doc, oldId, newId));
-    if (ok && oldId !== newId) get().selectState(newId);
-    return ok;
   },
 
   makeInitial: (id) => {
@@ -323,12 +318,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   updateTransitionFields: (id, patch, coalesceKey) => {
     get().commit((doc) => updateTransition(doc, id, patch), { coalesceKey });
-  },
-
-  renameTransition: (oldId, newId) => {
-    const ok = get().commit((doc) => renameTransitionId(doc, oldId, newId));
-    if (ok && oldId !== newId) get().selectTransition(newId);
-    return ok;
   },
 
   deleteElements: (stateIds, transitionIds) => {
