@@ -3,3 +3,6 @@ dist
 .DS_Store
 *.log
 *.tsbuildinfo
+
+# Insumos de referencia que no se versionan
+first-sample.html
