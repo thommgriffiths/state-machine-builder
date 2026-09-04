@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LABEL_GAP, computeTransitionGeometry, resolveCurvatures } from '../src/ui/adapter';
+import { computeTransitionGeometry, resolveCurvatures } from '../src/ui/adapter';
 import { fixtureDocument } from './fixtures';
 
 const options = { radius: 36, curvature: 0, arrowLength: 13, arrowWidth: 11, loopSize: 80 };
@@ -31,12 +31,12 @@ describe('computeTransitionGeometry', () => {
     }
   });
 
-  it('con curvatura 0 la línea es recta entre centros y la etiqueta va arriba', () => {
+  it('con curvatura 0 la línea es recta entre centros y la etiqueta se centra en su punto medio', () => {
     const g = computeTransitionGeometry({ x: 0, y: 0 }, { x: 300, y: 0 }, options);
     expect(g.start).toEqual({ x: 36, y: 0 });
     expect(g.end).toEqual({ x: 264, y: 0 });
     expect(g.labelAnchor).toEqual({ x: 0, y: -1 });
-    expect(g.labelPosition).toEqual({ x: 150, y: -LABEL_GAP });
+    expect(g.labelPosition).toEqual({ x: 150, y: 0 });
     // Da igual el sentido: la etiqueta de una recta horizontal siempre va arriba.
     const reverse = computeTransitionGeometry({ x: 300, y: 0 }, { x: 0, y: 0 }, options);
     expect(reverse.labelAnchor).toEqual({ x: 0, y: -1 });

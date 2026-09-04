@@ -85,9 +85,13 @@ Adaptaciones relevantes:
   fijo, el adaptador los entrega ya `measured`; sin eso React Flow los
   considera "no inicializados" y nunca ejecuta el `fitView` encolado, porque
   un nodo con `width`/`height` explícitos no se vuelve a medir.
-- Las etiquetas de transición se anclan del lado exterior de la curva (arriba
-  en rectas horizontales) para no tapar la línea ni las descripciones de los
-  nodos; el punto y el vector de anclaje los calcula `geometry.ts`.
+- Las etiquetas de transición se centran en el punto medio de su curva, dentro
+  de una caja opaca ajustada al texto. Al interrumpir la línea, la etiqueta se
+  lee como parte de esa transición y no de la vecina, que es el problema real
+  en diagramas densos. `geometry.ts` calcula ese punto medio; también expone
+  `labelAnchor`, el vector hacia el lado exterior de la curva, que hoy no se
+  usa para posicionar pero describe la geometría por si conviene volver a
+  correr la etiqueta al costado.
 
 ### Dagre para el auto-layout explícito
 

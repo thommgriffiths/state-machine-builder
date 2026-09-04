@@ -778,19 +778,25 @@ textarea.input {
   position: absolute;
   pointer-events: all;
   cursor: pointer;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(235, 235, 235, 0.88);
-  text-align: center;
+  /* Caja mínima centrada sobre la curva: se ajusta al texto y corta la línea,
+     de modo que se lee como parte de esa transición y no de la de al lado. */
+  display: inline-block;
+  width: max-content;
   max-width: 190px;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  text-align: center;
   font-size: 12px;
   line-height: 1.2;
   user-select: none;
 }
 
 .transition-label.is-selected {
-  outline: 1.5px solid rgba(31, 111, 178, 0.7);
-  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .transition-label__secondary {

@@ -9,10 +9,6 @@ function TransitionEdgeComponent({ id, data, selected }: EdgeProps<TransitionFlo
   const { geometry, color, lineStyle, primaryText, secondaryText } = data;
   const points = geometry.arrowhead.map((p) => p.x.toFixed(2) + ',' + p.y.toFixed(2)).join(' ');
   const dash = lineStyle === 'dashed' ? '8 5' : undefined;
-  // Ancla la caja de la etiqueta del lado exterior de la curva: con anchor
-  // (0,-1) el borde inferior de la caja queda sobre el punto; con (1,0), el izquierdo.
-  const anchorX = -50 + 50 * geometry.labelAnchor.x;
-  const anchorY = -50 + 50 * geometry.labelAnchor.y;
 
   return (
     <>
@@ -29,8 +25,10 @@ function TransitionEdgeComponent({ id, data, selected }: EdgeProps<TransitionFlo
           <div
             className={'transition-label nodrag nopan' + (selected ? ' is-selected' : '')}
             style={{
+              // La caja se centra en el punto medio de la curva: la línea queda
+              // interrumpida por la etiqueta, que así se lee como parte de ella.
               transform:
-                'translate(' + anchorX.toFixed(1) + '%, ' + anchorY.toFixed(1) + '%) translate(' +
+                'translate(-50%, -50%) translate(' +
                 geometry.labelPosition.x.toFixed(2) + 'px, ' + geometry.labelPosition.y.toFixed(2) + 'px)',
               color,
             }}

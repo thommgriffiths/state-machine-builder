@@ -25,18 +25,16 @@ export interface TransitionGeometry {
   endDirection: Point;
   /** Triángulo de la punta de flecha (tip, base izquierda, base derecha). */
   arrowhead: [Point, Point, Point];
-  /** Punto de anclaje de la etiqueta: junto al punto medio de la curva, del lado exterior. */
+  /** Punto medio de la curva: la etiqueta se centra exactamente ahí. */
   labelPosition: Point;
   /**
-   * Vector unitario que apunta desde la curva hacia el lado donde va la
-   * etiqueta (exterior del abombamiento; "arriba" en rectas). La UI ancla la
-   * caja de texto para que quede completamente de ese lado.
+   * Vector unitario que apunta desde la curva hacia su lado exterior (el del
+   * abombamiento; "arriba" en rectas). La etiqueta ya no se desplaza hacia ahí
+   * (va centrada sobre la línea), pero el dato se conserva porque describe la
+   * geometría y permite volver a correrla al costado si hiciera falta.
    */
   labelAnchor: Point;
 }
-
-/** Separación entre la curva y el borde de la etiqueta. */
-export const LABEL_GAP = 5;
 
 export interface GeometryOptions {
   radius: number;
@@ -77,8 +75,6 @@ export function computeTransitionGeometry(from: Point, to: Point, options: Geome
   } else {
     labelAnchor = normal.x < 0 ? normal : negate(normal);
   }
-  const labelPosition = { x: midpoint.x + labelAnchor.x * LABEL_GAP, y: midpoint.y + labelAnchor.y * LABEL_GAP };
-
   return {
     kind: 'curve',
     path: 'M ' + fmt(start) + ' Q ' + fmt(control) + ' ' + fmt(end),
@@ -86,7 +82,7 @@ export function computeTransitionGeometry(from: Point, to: Point, options: Geome
     end,
     endDirection,
     arrowhead: arrowhead(end, endDirection, options.arrowLength, options.arrowWidth),
-    labelPosition,
+    labelPosition: midpoint,
     labelAnchor,
   };
 }
@@ -113,7 +109,6 @@ export function computeSelfLoop(center: Point, options: GeometryOptions): Transi
     y: (start.y + 3 * c1.y + 3 * c2.y + end.y) / 8,
   };
   const labelAnchor = unitVector(center, midpoint);
-  const labelPosition = { x: midpoint.x + labelAnchor.x * LABEL_GAP, y: midpoint.y + labelAnchor.y * LABEL_GAP };
 
   return {
     kind: 'loop',
@@ -122,7 +117,7 @@ export function computeSelfLoop(center: Point, options: GeometryOptions): Transi
     end,
     endDirection,
     arrowhead: arrowhead(end, endDirection, options.arrowLength, options.arrowWidth),
-    labelPosition,
+    labelPosition: midpoint,
     labelAnchor,
   };
 }
