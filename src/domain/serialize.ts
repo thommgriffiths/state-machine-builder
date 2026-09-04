@@ -87,6 +87,7 @@ export function canonicalize(doc: StateMachineDocument): StateMachineDocument {
       initialStateId: doc.machine.initialStateId,
       states: doc.machine.states.map((s) => {
         const out: StateMachineDocument['machine']['states'][number] = { id: s.id, label: s.label, type: s.type };
+        if (s.parentId) out.parentId = s.parentId;
         if (s.subtitle) out.subtitle = s.subtitle;
         if (s.description) out.description = s.description;
         return out;
@@ -98,6 +99,11 @@ export function canonicalize(doc: StateMachineDocument): StateMachineDocument {
         if (t.condition) out.condition = t.condition;
         if (t.action) out.action = t.action;
         if (t.description) out.description = t.description;
+        return out;
+      }),
+      parents: doc.machine.parents.map((p) => {
+        const out: StateMachineDocument['machine']['parents'][number] = { id: p.id, label: p.label };
+        if (p.description) out.description = p.description;
         return out;
       }),
     },

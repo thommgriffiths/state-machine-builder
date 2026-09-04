@@ -71,7 +71,7 @@ describe('placeNewStates', () => {
   it('usa el origen cuando el lienzo está vacío', () => {
     const doc: StateMachineDocument = {
       ...fixtureDocument(),
-      machine: { id: 'm', name: 'm', initialStateId: 'a', states: [{ id: 'a', label: 'a', type: 'normal' }], transitions: [] },
+      machine: { id: 'm', name: 'm', initialStateId: 'a', states: [{ id: 'a', label: 'a', type: 'normal' }], transitions: [], parents: [] },
       layout: { states: {} },
     };
     const layout = placeNewStates(doc, ['a']);

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { validateDocument, type State, type Transition } from '../../domain';
+import { substatesOf, validateDocument, type State, type Transition } from '../../domain';
 import { resolveCurvatures } from '../adapter';
 import { useEditorStore } from '../store/editorStore';
 import { ColorInput, CurvatureInput, Field, TextInput } from './fields';
@@ -68,6 +68,68 @@ function ElementTabs({ tab, onTabChange }: { tab: ElementTab; onTabChange: (tab:
   );
 }
 
+/**
+ * Elegir el estado padre de un subestado, o crear uno en el momento. Los padres
+ * no están en el lienzo, así que este selector es el único lugar donde
+ * aparecen mientras no los dibujemos.
+ */
+function ParentPicker({ stateId, value }: { stateId: string; value: string | undefined }) {
+  const parents = useEditorStore((s) => s.document.machine.parents);
+  const setParent = useEditorStore((s) => s.setParent);
+  const createParent = useEditorStore((s) => s.createParent);
+  const [creating, setCreating] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  const confirm = () => {
+    const label = draft.trim();
+    if (label === '') return;
+    createParent(label, stateId);
+    setDraft('');
+    setCreating(false);
+  };
+
+  return (
+    <>
+      <Field label="Pertenece a" hint="(los estados padre no se dibujan en el lienzo)">
+        <select
+          className="input"
+          value={creating ? '__nuevo__' : (value ?? '')}
+          onChange={(e) => {
+            if (e.target.value === '__nuevo__') {
+              setCreating(true);
+              return;
+            }
+            setCreating(false);
+            setParent(stateId, e.target.value === '' ? null : e.target.value);
+          }}
+        >
+          <option value="">— suelto, sin estado padre —</option>
+          {parents.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+          <option value="__nuevo__">+ Crear un estado padre nuevo…</option>
+        </select>
+      </Field>
+      {creating && (
+        <div className="field">
+          <span className="field__label">Nombre del estado padre nuevo</span>
+          <div className="curvature-input__row">
+            <TextInput value={draft} onChange={setDraft} placeholder="Por ejemplo: Admisibilidad" />
+            <button type="button" className="button button--primary" onClick={confirm} disabled={draft.trim() === ''}>
+              Crear
+            </button>
+            <button type="button" className="button" onClick={() => { setCreating(false); setDraft(''); }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function stateOption(state: State): string {
   return state.label === state.id ? state.id : state.label + ' (' + state.id + ')';
 }
@@ -115,6 +177,9 @@ function MachineInspector() {
         </div>
       </dl>
 
+      <h3 className="inspector__subtitle">Estados padre</h3>
+      <ParentList />
+
       <h3 className="inspector__subtitle">Validación</h3>
       <ValidationList issues={issues} />
 
@@ -129,6 +194,53 @@ function MachineInspector() {
         <li>Con varios estados seleccionados, arrastrar uno los mueve a todos manteniendo sus distancias.</li>
         <li>Arrastrar con el botón derecho sobre el lienzo vacío: desplazar la vista. Rueda: zoom.</li>
       </ul>
+    </div>
+  );
+}
+
+/** Lista de estados padre, con su cantidad de subestados. */
+function ParentList() {
+  const document = useEditorStore((s) => s.document);
+  const updateParentFields = useEditorStore((s) => s.updateParentFields);
+  const deleteParent = useEditorStore((s) => s.deleteParent);
+  const selectState = useEditorStore((s) => s.selectState);
+  const { parents, states } = document.machine;
+
+  if (parents.length === 0) {
+    return <p className="muted">Todavía no hay estados padre. Se crean desde el inspector de un subestado.</p>;
+  }
+
+  return (
+    <div className="links">
+      {parents.map((parent) => {
+        const subestados = substatesOf(states, parent.id);
+        return (
+          <div key={parent.id} className="parent-row">
+            <TextInput
+              value={parent.label}
+              onChange={(v) => updateParentFields(parent.id, { label: v }, 'parent.label:' + parent.id)}
+            />
+            <div className="parent-row__meta">
+              <span className="muted">
+                {subestados.length === 0 ? 'sin subestados' : subestados.length + ' subestado(s): '}
+                {subestados.map((sub) => (
+                  <button key={sub.id} type="button" className="link" onClick={() => selectState(sub.id)}>
+                    {sub.label}
+                  </button>
+                ))}
+              </span>
+              <button
+                type="button"
+                className="button button--small button--danger"
+                title="Eliminar el estado padre. Sus subestados quedan sueltos, no se borran."
+                onClick={() => deleteParent(parent.id)}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -152,6 +264,7 @@ function StateInspector({ stateId, tab, onTabChange }: { stateId: string; tab: E
   const outgoing = document.machine.transitions.filter((t) => t.from === stateId);
   const incoming = document.machine.transitions.filter((t) => t.to === stateId);
   const position = document.layout.states[stateId];
+  const padre = state.parentId ? document.machine.parents.find((p) => p.id === state.parentId) : undefined;
 
   return (
     <div className="inspector">
@@ -197,6 +310,15 @@ function StateInspector({ stateId, tab, onTabChange }: { stateId: string; tab: E
               {isInitial ? 'Es el estado inicial' : 'Marcar como inicial'}
             </button>
           </div>
+
+          <h3 className="inspector__subtitle">Estado padre</h3>
+          <ParentPicker stateId={stateId} value={state.parentId} />
+          {padre && (
+            <p className="muted">
+              Subestado de <strong>{padre.label}</strong>. Junto a él hay{' '}
+              {substatesOf(document.machine.states, padre.id).length - 1} subestado(s) más.
+            </p>
+          )}
 
           <h3 className="inspector__subtitle">Transiciones</h3>
           <NewTransitionForm from={stateId} onCreate={(to) => createTransition({ from: stateId, to })} />

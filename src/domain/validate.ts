@@ -5,7 +5,7 @@
  * Las advertencias señalan inconsistencias o lints que la UI muestra pero que
  * no bloquean (la reconciliación corrige las de metadata huérfana y lo informa).
  */
-import type { StateMachineDocument } from './types';
+import type { State, StateMachineDocument } from './types';
 
 export type Severity = 'error' | 'warning';
 
@@ -17,6 +17,8 @@ export type IssueCode =
   | 'UNKNOWN_TO_STATE'
   | 'INITIAL_STATE_MISSING'
   | 'UNKNOWN_INITIAL_STATE'
+  | 'UNKNOWN_PARENT_STATE'
+  | 'EMPTY_PARENT'
   | 'INVALID_POSITION'
   | 'ORPHAN_LAYOUT'
   | 'ORPHAN_STATE_STYLE'
@@ -62,6 +64,27 @@ export function validateDocument(doc: StateMachineDocument): ValidationIssue[] {
     stateIds.add(state.id);
   });
 
+  const parentIds = new Set<string>();
+  machine.parents.forEach((parent, index) => {
+    const path = `machine.parents[${index}]`;
+    if (!parent.id) {
+      issues.push({ severity: 'error', code: 'EMPTY_ID', message: 'Un estado padre tiene un id vacío.', path });
+      return;
+    }
+    if (allIds.has(parent.id)) {
+      issues.push({
+        severity: 'error',
+        code: 'DUPLICATE_ID',
+        message: `El id "${parent.id}" está duplicado (ya usado en ${allIds.get(parent.id)}).`,
+        path,
+        elementId: parent.id,
+      });
+      return;
+    }
+    allIds.set(parent.id, path);
+    parentIds.add(parent.id);
+  });
+
   machine.transitions.forEach((transition, index) => {
     const path = `machine.transitions[${index}]`;
     if (!transition.id) {
@@ -93,6 +116,20 @@ export function validateDocument(doc: StateMachineDocument): ValidationIssue[] {
         message: `La transición "${transition.id}" apunta a un estado inexistente: "${transition.to}".`,
         path: `${path}.to`,
         elementId: transition.id,
+      });
+    }
+  });
+
+  // Jerarquía: el padre referenciado debe existir en machine.parents.
+  machine.states.forEach((state, index) => {
+    if (state.parentId === undefined) return;
+    if (!parentIds.has(state.parentId)) {
+      issues.push({
+        severity: 'error',
+        code: 'UNKNOWN_PARENT_STATE',
+        message: `El subestado "${state.id}" pertenece al estado padre "${state.parentId}", que no existe.`,
+        path: `machine.states[${index}].parentId`,
+        elementId: state.id,
       });
     }
   });
@@ -187,6 +224,18 @@ export function validateDocument(doc: StateMachineDocument): ValidationIssue[] {
     }
   }
 
+  for (const parent of machine.parents) {
+    if (!machine.states.some((s) => s.parentId === parent.id)) {
+      issues.push({
+        severity: 'warning',
+        code: 'EMPTY_PARENT',
+        message: `El estado padre "${parent.id}" no agrupa ningún subestado.`,
+        path: 'machine.parents',
+        elementId: parent.id,
+      });
+    }
+  }
+
   for (const state of machine.states) {
     if (state.type === 'final' && machine.transitions.some((t) => t.from === state.id)) {
       issues.push({
@@ -200,6 +249,11 @@ export function validateDocument(doc: StateMachineDocument): ValidationIssue[] {
   }
 
   return issues;
+}
+
+/** Subestados de un estado padre, en el orden en que aparecen en `machine.states`. */
+export function substatesOf(states: readonly State[], parentId: string): State[] {
+  return states.filter((s) => s.parentId === parentId);
 }
 
 export function reachableFrom(doc: StateMachineDocument, startId: string): Set<string> {

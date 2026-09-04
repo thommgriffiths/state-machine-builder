@@ -10,6 +10,7 @@ import { generateId } from './ids';
 import { placeNewStates } from './placement';
 import type {
   Machine,
+  ParentState,
   Position,
   State,
   StateMachineDocument,
@@ -25,6 +26,7 @@ export type DomainErrorCode =
   | 'UNKNOWN_TRANSITION'
   | 'DUPLICATE_ID'
   | 'EMPTY_ID'
+  | 'UNKNOWN_PARENT'
   | 'INITIAL_STATE_REMOVAL'
   | 'INVALID_VALUE';
 
@@ -63,7 +65,9 @@ export function requireTransition(doc: StateMachineDocument, id: string): Transi
 
 function assertIdAvailable(doc: StateMachineDocument, id: string): void {
   if (!id || id.trim() === '') throw new DomainError('EMPTY_ID', 'El id no puede estar vacío.');
-  if (findState(doc, id) || findTransition(doc, id)) {
+  // Los ids son únicos en TODO el documento: subestados, transiciones y padres
+  // comparten espacio de nombres.
+  if (findState(doc, id) || findTransition(doc, id) || findParent(doc, id)) {
     throw new DomainError('DUPLICATE_ID', `El id "${id}" ya está en uso.`);
   }
 }
@@ -107,6 +111,8 @@ export interface AddStateInput {
   subtitle?: string;
   /** Detalle de negocio; no se dibuja. */
   description?: string;
+  /** ID del estado que lo contiene (jerarquía). */
+  parentId?: string;
   /** Centro del nodo. Si se omite, se calcula una posición automática (solo para este estado). */
   position?: Position;
 }
@@ -118,6 +124,10 @@ export function addState(doc: StateMachineDocument, input: AddStateInput): { doc
   const state: State = { id, label: input.label, type: input.type ?? 'normal' };
   if (input.subtitle) state.subtitle = input.subtitle;
   if (input.description) state.description = input.description;
+  if (input.parentId) {
+    requireParent(doc, input.parentId);
+    state.parentId = input.parentId;
+  }
 
   const machine: Machine = {
     ...doc.machine,
@@ -150,6 +160,88 @@ export function updateState(
     return updated;
   });
   return withMachine(doc, { ...doc.machine, states });
+}
+
+/**
+ * Asigna (o quita, con `null`) el estado padre de un subestado. Los padres son
+ * planos, así que no hay ciclos posibles: basta con que el padre exista.
+ */
+export function setStateParent(doc: StateMachineDocument, stateId: string, parentId: string | null): StateMachineDocument {
+  requireState(doc, stateId);
+  if (parentId !== null) requireParent(doc, parentId);
+  const states = doc.machine.states.map((s) => {
+    if (s.id !== stateId) return s;
+    return parentId === null ? omitParent(s) : { ...s, parentId };
+  });
+  return withMachine(doc, { ...doc.machine, states });
+}
+
+function omitParent(state: State): State {
+  const { parentId: _ignored, ...rest } = state;
+  return rest;
+}
+
+// ---------------------------------------------------------------------------
+// Estados padre (agrupan subestados; no se dibujan)
+// ---------------------------------------------------------------------------
+
+export function findParent(doc: StateMachineDocument, id: string): ParentState | undefined {
+  return doc.machine.parents.find((p) => p.id === id);
+}
+
+export function requireParent(doc: StateMachineDocument, id: string): ParentState {
+  const parent = findParent(doc, id);
+  if (!parent) throw new DomainError('UNKNOWN_PARENT', `No existe el estado padre "${id}".`);
+  return parent;
+}
+
+export interface AddParentInput {
+  id?: string;
+  label: string;
+  description?: string;
+}
+
+export function addParent(
+  doc: StateMachineDocument,
+  input: AddParentInput,
+): { document: StateMachineDocument; parentId: string } {
+  const id = input.id ?? generateId(doc, 'parent');
+  assertIdAvailable(doc, id);
+  const parent: ParentState = { id, label: input.label };
+  if (input.description) parent.description = input.description;
+  return {
+    document: withMachine(doc, { ...doc.machine, parents: [...doc.machine.parents, parent] }),
+    parentId: id,
+  };
+}
+
+export function updateParent(
+  doc: StateMachineDocument,
+  parentId: string,
+  patch: Partial<Pick<ParentState, 'label' | 'description'>>,
+): StateMachineDocument {
+  requireParent(doc, parentId);
+  const parents = doc.machine.parents.map((p) => {
+    if (p.id !== parentId) return p;
+    const updated: ParentState = { ...p, ...patch };
+    if (!updated.description) delete updated.description;
+    return updated;
+  });
+  return withMachine(doc, { ...doc.machine, parents });
+}
+
+/**
+ * Elimina un estado padre. Sus subestados NO se borran: quedan sueltos. Es lo
+ * menos destructivo, y evita dejar un `parentId` apuntando a la nada.
+ */
+export function removeParent(doc: StateMachineDocument, parentId: string): StateMachineDocument {
+  requireParent(doc, parentId);
+  const machine: Machine = {
+    ...doc.machine,
+    states: doc.machine.states.map((s) => (s.parentId === parentId ? omitParent(s) : s)),
+    parents: doc.machine.parents.filter((p) => p.id !== parentId),
+  };
+  return withMachine(doc, machine);
 }
 
 /** Renombra el id de un estado propagando el cambio a transiciones, inicial, layout y estilos. */

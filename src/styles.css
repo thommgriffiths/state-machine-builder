@@ -824,3 +824,19 @@ textarea.input {
 .react-flow__controls button {
   border-bottom: 1px solid var(--border);
 }
+
+/* Fila de un estado padre en el inspector de la máquina. */
+.parent-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.parent-row__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}

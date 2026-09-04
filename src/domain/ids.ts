@@ -1,12 +1,13 @@
 import type { StateMachineDocument } from './types';
 
-export type IdPrefix = 'state' | 'transition';
+export type IdPrefix = 'state' | 'transition' | 'parent';
 
-/** Devuelve todos los IDs usados en el documento (estados y transiciones). */
+/** Devuelve todos los IDs usados en el documento (subestados, transiciones y padres). */
 export function collectIds(doc: StateMachineDocument): Set<string> {
   const ids = new Set<string>();
   for (const s of doc.machine.states) ids.add(s.id);
   for (const t of doc.machine.transitions) ids.add(t.id);
+  for (const p of doc.machine.parents) ids.add(p.id);
   return ids;
 }
 

@@ -35,6 +35,16 @@ export const stateSchema = z.strictObject({
   type: stateTypeSchema.default('normal').describe('"final" marca un estado terminal'),
   subtitle: optionalText.describe('Texto corto dibujado debajo del nodo'),
   description: optionalText.describe('Detalle de negocio; no se dibuja, se ve en el inspector'),
+  parentId: idSchema
+    .nullish()
+    .transform((value) => value ?? undefined)
+    .describe('ID del estado padre que lo agrupa. Ausente = subestado suelto'),
+});
+
+export const parentStateSchema = z.strictObject({
+  id: idSchema,
+  label: z.string().describe('Nombre del estado padre'),
+  description: optionalText.describe('Detalle de negocio; no se dibuja'),
 });
 
 export const transitionSchema = z.strictObject({
@@ -52,8 +62,9 @@ export const machineSchema = z.strictObject({
   id: idSchema,
   name: z.string(),
   initialStateId: idSchema.nullable().describe('ID del estado inicial (null solo si no hay estados)'),
-  states: z.array(stateSchema),
+  states: z.array(stateSchema).describe('Subestados: lo que se dibuja'),
   transitions: z.array(transitionSchema),
+  parents: z.array(parentStateSchema).default([]).describe('Estados padre que agrupan subestados; no se dibujan'),
 });
 
 export const positionSchema = z.strictObject({

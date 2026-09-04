@@ -16,6 +16,7 @@ export function fixtureDocument(): StateMachineDocument {
         { id: 'B', label: 'B', type: 'normal', subtitle: 'Estado intermedio', description: 'Detalle de negocio de B.' },
         { id: 'C', label: 'C', type: 'final' },
       ],
+      parents: [],
       transitions: [
         { id: 't-ab', from: 'A', to: 'B', label: 'ir a B', event: 'GO' },
         { id: 't-bc', from: 'B', to: 'C', event: 'FINISH', condition: 'ok', action: 'notify' },

@@ -68,6 +68,19 @@
                   "string",
                   "null"
                 ]
+              },
+              "parentId": {
+                "description": "ID del estado padre que lo agrupa. Ausente = subestado suelto",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Identificador estable y único dentro del documento"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               }
             },
             "required": [
@@ -75,7 +88,8 @@
               "label"
             ],
             "additionalProperties": false
-          }
+          },
+          "description": "Subestados: lo que se dibuja"
         },
         "transitions": {
           "type": "array",
@@ -137,6 +151,36 @@
               "id",
               "from",
               "to"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "parents": {
+          "description": "Estados padre que agrupan subestados; no se dibujan",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Identificador estable y único dentro del documento"
+              },
+              "label": {
+                "type": "string",
+                "description": "Nombre del estado padre"
+              },
+              "description": {
+                "description": "Detalle de negocio; no se dibuja",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "label"
             ],
             "additionalProperties": false
           }

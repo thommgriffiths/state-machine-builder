@@ -64,7 +64,7 @@ npm run validate -- examples/simple.json   # valida archivos JSON desde la termi
 ```
 
 - `machine` es la fuente de verdad del negocio. Los estados tienen `id`, `label`,
-  `type` (`normal` | `final`), `subtitle` y `description` opcionales. Las
+  `type` (`normal` | `final`), y `subtitle`, `description` y `parentId` opcionales. Las
   transiciones tienen `id`, `from`, `to` y, opcionalmente, `label`, `event`,
   `condition`, `action` y `description`. El estado inicial es
   `machine.initialStateId`.
@@ -72,6 +72,10 @@ npm run validate -- examples/simple.json   # valida archivos JSON desde la termi
   el detalle de negocio, tan largo como haga falta: **no se dibuja**, se lee y
   edita en la barra lateral. Estados y transiciones tienen ambas cosas salvo el
   subtítulo, que es solo de los estados.
+- Todo lo que está en `machine.states` es un **subestado** y se dibuja. Los
+  **estados padre** viven en `machine.parents`, agrupan subestados y no se
+  dibujan; `state.parentId` referencia uno de ellos. Un subestado sin padre es
+  válido: queda suelto. Por ahora los padres son planos, no se anidan.
 - `layout.states[id]` es el **centro** del nodo. Es opcional: lo que falte se
   posiciona automáticamente (solo eso; nada existente se mueve).
 - `styles` guarda color por ID, `curvature` en `[-1, 1]` y `lineStyle`. Los
@@ -87,6 +91,7 @@ npm run validate -- examples/simple.json   # valida archivos JSON desde la termi
 | Mover un estado | Arrastrar el círculo (solo cambia `layout`) |
 | Crear una transición | Arrastrar desde el anillo exterior de un estado hasta otro (o el mismo, para un bucle); o desde el inspector del estado, "Nueva transición hacia…" |
 | Editar estado / transición | Clic para seleccionar. La barra lateral queda reservada al elemento seleccionado y separa sus propiedades en dos pestañas: **Negocio** (etiqueta, subtítulo, descripción, tipo, inicial, `from`/`to`, evento, condición, acción) y **Estilo** (color, curvatura, estilo de línea, y la posición de layout) |
+| Jerarquía | Cada estado del lienzo es un subestado. En su pestaña Negocio, "Pertenece a" elige un estado padre ya existente o crea uno en el momento, sin salir del panel. Los padres no se dibujan: se administran desde el inspector de la máquina, que lista cada uno con sus subestados. Eliminar un padre no borra sus subestados: quedan sueltos |
 | IDs | Se generan solos (`state-N`, `transition-N`) y son únicos en todo el documento. El inspector los muestra pero no deja editarlos: son identidad interna, no un nombre. Para cambiar uno, editá el JSON |
 | Eliminar | Supr / Retroceso con la selección, o botón "Eliminar" en el inspector. Eliminar un estado elimina sus transiciones; el estado inicial no puede eliminarse hasta marcar otro |
 | Curvatura | Slider, botones −/+, "Recta" o "Auto" en el inspector de la transición |

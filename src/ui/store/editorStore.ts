@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import {
   DomainError,
   addState,
+  addParent,
   addTransition,
   applyLayout,
   computeAutoLayout,
@@ -16,18 +17,22 @@ import {
   generateId,
   DEFAULT_PLACEMENT_OPTIONS,
   moveStates,
+  removeParent,
   removeStates,
   removeTransitions,
   serializeDocument,
   setInitialState,
+  setStateParent,
   setStateStyle,
   setTransitionStyle,
   setViewport,
   updateMachineMeta,
+  updateParent,
   updateState,
   updateTransition,
   type Position,
   type ReconcileReport,
+  type ParentState,
   type State,
   type StateMachineDocument,
   type StateStyle,
@@ -110,6 +115,12 @@ export interface EditorStore {
   createState: (input: { label?: string; position?: Position; avoidOverlap?: boolean }) => void;
   updateStateFields: (id: string, patch: Partial<Pick<State, 'label' | 'type' | 'subtitle' | 'description'>>, coalesceKey?: string) => void;
   makeInitial: (id: string) => void;
+  /** Asigna el estado padre de un subestado (`null` lo deja suelto). */
+  setParent: (stateId: string, parentId: string | null) => void;
+  /** Crea un estado padre y, si se indica, le asigna un subestado. */
+  createParent: (label: string, forStateId?: string) => void;
+  updateParentFields: (id: string, patch: Partial<Pick<ParentState, 'label' | 'description'>>, coalesceKey?: string) => void;
+  deleteParent: (id: string) => void;
   createTransition: (input: { from: string; to: string }) => void;
   updateTransitionFields: (
     id: string,
@@ -304,6 +315,26 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   makeInitial: (id) => {
     get().commit((doc) => setInitialState(doc, id));
+  },
+
+  setParent: (stateId, parentId) => {
+    get().commit((doc) => setStateParent(doc, stateId, parentId));
+  },
+
+  createParent: (label, forStateId) => {
+    get().commit((doc) => {
+      const { document, parentId } = addParent(doc, { label });
+      // Crear el padre desde el inspector de un subestado lo asigna de una vez.
+      return forStateId ? setStateParent(document, forStateId, parentId) : document;
+    });
+  },
+
+  updateParentFields: (id, patch, coalesceKey) => {
+    get().commit((doc) => updateParent(doc, id, patch), { coalesceKey });
+  },
+
+  deleteParent: (id) => {
+    get().commit((doc) => removeParent(doc, id));
   },
 
   createTransition: ({ from, to }) => {

@@ -31,6 +31,29 @@ export interface State {
    * el lienzo: se lee y edita en el inspector.
    */
   description?: string;
+  /**
+   * ID del estado padre al que pertenece este subestado (ver `ParentState`).
+   * Ausente = subestado suelto. Es una relación semántica más, expresada por
+   * ID como todas: no implica nada sobre dónde se dibuja el nodo.
+   */
+  parentId?: string;
+}
+
+/**
+ * Estado padre: agrupa subestados. NO se dibuja en el lienzo ni participa de
+ * las transiciones; existe solo en el modelo. Por eso vive en su propia
+ * colección y no en `states`: todo lo que hay en `states` es un subestado que
+ * se dibuja, tenga padre o no.
+ *
+ * Por ahora los padres son planos: agrupan subestados pero no se anidan entre
+ * sí.
+ */
+export interface ParentState {
+  /** Identidad estable y única (en todo el documento, junto a estados y transiciones). */
+  id: string;
+  label: string;
+  /** Detalle de negocio del padre. No se dibuja. */
+  description?: string;
 }
 
 export interface Transition {
@@ -60,8 +83,11 @@ export interface Machine {
   name: string;
   /** ID del estado inicial. Solo puede ser `null` si la máquina no tiene estados. */
   initialStateId: string | null;
+  /** Subestados: lo que se dibuja en el lienzo. */
   states: State[];
   transitions: Transition[];
+  /** Estados padre que agrupan subestados. No se dibujan. */
+  parents: ParentState[];
 }
 
 // ---------------------------------------------------------------------------

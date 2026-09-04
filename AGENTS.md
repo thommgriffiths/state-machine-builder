@@ -36,10 +36,11 @@ lo hará y lo informará como "metadata huérfana".
     "name": "Ciclo de vida de un pedido",
     "initialStateId": "nuevo",
     "states": [
-      { "id": "nuevo", "label": "Nuevo", "type": "normal", "subtitle": "Pedido creado", "description": "Se crea al confirmar el carrito. Reserva stock por 30 minutos." },
+      { "id": "nuevo", "label": "Nuevo", "type": "normal", "parentId": "parent-1", "subtitle": "Pedido creado", "description": "Se crea al confirmar el carrito. Reserva stock por 30 minutos." },
       { "id": "pagado", "label": "Pagado", "type": "normal" },
       { "id": "cancelado", "label": "Cancelado", "type": "final" }
     ],
+    "parents": [{ "id": "parent-1", "label": "Pedido abierto" }],
     "transitions": [
       { "id": "t-pagar", "from": "nuevo", "to": "pagado", "label": "Pagar", "event": "PAGAR", "condition": null, "action": "registrarPago", "description": "La pasarela confirma el cobro y se emite la factura." },
       { "id": "t-cancelar", "from": "nuevo", "to": "cancelado", "event": "CANCELAR" }
@@ -63,8 +64,9 @@ lo hará y lo informará como "metadata huérfana".
 
 - `id`, `name`: identifican la máquina.
 - `initialStateId`: ID de un estado existente. Solo puede ser `null` si no hay estados.
-- `states[]`: `{ id, label, type?, subtitle?, description? }`. `type` es `"normal"` (por defecto) o `"final"`.
+- `states[]`: `{ id, label, type?, subtitle?, description?, parentId? }`. `type` es `"normal"` (por defecto) o `"final"`.
   Puede haber varios estados finales. El estado inicial **no** se marca con `type`; se define en `initialStateId`.
+- `parentId` referencia un estado padre de `machine.parents`. Ausente = subestado suelto.
 - `transitions[]`: `{ id, from, to, label?, event?, condition?, action?, description? }`.
   - `from` y `to` son IDs de estados existentes. La flecha siempre apunta a `to`.
   - Toda transición es unidireccional. Una relación en ambos sentidos son **dos transiciones** con IDs distintos.
@@ -84,6 +86,35 @@ lo hará y lo informará como "metadata huérfana".
 responsables o cualquier explicación extensa: no ensucia el diagrama porque no
 se dibuja, y la persona la lee en la barra lateral al seleccionar el elemento.
 Si el texto tiene que verse en el gráfico, va en `label` o en `subtitle`.
+
+### Jerarquía: subestados y estados padre
+
+Todo lo que está en `machine.states` es un **subestado**: es lo que se dibuja en
+el lienzo. Los **estados padre** viven aparte, en `machine.parents`, agrupan
+subestados y **no se dibujan**:
+
+```json
+"machine": {
+  "states": [
+    { "id": "state-1", "label": "Ingreso", "parentId": "parent-1" },
+    { "id": "state-2", "label": "Suelto" }
+  ],
+  "parents": [{ "id": "parent-1", "label": "Admisibilidad" }]
+}
+```
+
+- `parents[]`: `{ id, label, description? }`. Sus ids comparten espacio de
+  nombres con estados y transiciones: deben ser únicos en todo el documento.
+- `state.parentId` referencia un **padre**, nunca otro estado. Apuntar a un
+  estado es un error de validación.
+- Un subestado sin `parentId` es válido: queda suelto.
+- Los padres son **planos**: agrupan subestados pero no se anidan entre sí.
+- Los padres no participan de las transiciones ni tienen entrada en `layout`.
+  Poner un padre en `from` o `to` es un error.
+- `machine.parents` puede omitirse: se asume vacío.
+
+Eliminar un padre **no borra sus subestados**: quedan sueltos. Un padre sin
+subestados se acepta, pero se avisa.
 
 ### `layout` (presentación; opcional)
 
@@ -147,6 +178,8 @@ Errores (el documento no se acepta):
 - claves desconocidas (por ejemplo un typo `lable`): los objetos son estrictos;
 - `id` vacío o duplicado;
 - transición sin `from` o sin `to`, o que referencia un estado inexistente;
+- `parentId` que no referencia un estado padre existente;
+- id de estado padre vacío o duplicado;
 - `initialStateId` inexistente, o `null` habiendo estados;
 - posiciones no numéricas; `curvature` fuera de `[-1, 1]`; `version` distinta de `2` (salvo la `1`, que se migra sola).
 
@@ -166,6 +199,7 @@ npm run validate -- ruta/al/documento.json
 - [ ] `version` es `1` y las claves de primer nivel son `machine`, `layout` (opcional) y `styles` (opcional).
 - [ ] Todos los IDs son únicos y no vacíos.
 - [ ] Todo `from`/`to` e `initialStateId` apuntan a estados existentes.
+- [ ] Todo `parentId` apunta a un id de `machine.parents`, no a un estado.
 - [ ] No inventaste coordenadas para cambiar el negocio, ni moviste estados existentes.
 - [ ] No usaste el color para expresar semántica; lo que significa algo está en `machine`.
 - [ ] No añadiste campos que no existen en el schema.
