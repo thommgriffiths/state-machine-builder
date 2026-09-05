@@ -15,24 +15,28 @@
         "id": "P01",
         "label": "P01",
         "type": "normal",
+        "parentId": "parent-antecedentes",
         "subtitle": "Búsqueda de antecedentes (SMP) · TR"
       },
       {
         "id": "T6289",
         "label": "T6289",
         "type": "normal",
+        "parentId": "parent-antecedentes",
         "subtitle": "Pase a Catastro · TR"
       },
       {
         "id": "T6290",
         "label": "T6290",
         "type": "normal",
+        "parentId": "parent-antecedentes",
         "subtitle": "Catastro vincula antecedentes · ES"
       },
       {
         "id": "T6291",
         "label": "T6291",
         "type": "normal",
+        "parentId": "parent-antecedentes",
         "subtitle": "Reingresa con antecedentes · TR"
       },
       {
@@ -345,6 +349,12 @@
         "from": "P02",
         "to": "P06",
         "label": "incompatibles"
+      }
+    ],
+    "parents": [
+      {
+        "id": "parent-antecedentes",
+        "label": "Antecedentes"
       }
     ]
   },
