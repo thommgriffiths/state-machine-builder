@@ -1,222 +1,52 @@
-# Guía para agentes LLM: cómo modificar una máquina de estados
+# Notas para agentes que trabajan sobre este repositorio
 
-Este proyecto es un editor de máquinas de estado cuyo formato persistido está
-diseñado para que un agente pueda **crear y modificar máquinas editando JSON**,
-sin preocuparse por el dibujo. Lee esta guía completa antes de tocar un
-documento. El schema formal está en
-[`docs/schema/state-machine-document.schema.json`](docs/schema/state-machine-document.schema.json)
-y los tipos en [`src/domain/types.ts`](src/domain/types.ts).
+Este proyecto es un editor de máquinas de estado. Su formato persistido está
+diseñado para que un agente pueda **crear y modificar máquinas editando JSON**
+sin tocar el dibujo.
 
-## Regla fundamental
+## El formato y las reglas para editarlo
 
-> Una máquina de estados es un modelo de negocio que casualmente se visualiza
-> como un grafo. No es un dibujo del que se infiere una máquina.
+Están en [`docs/guia-llm.md`](docs/guia-llm.md). Es la **única copia**: la
+aplicación la incrusta y la muestra en "Ayuda → Guía para LLMs", y un test
+(`tests/guides.test.ts`) comprueba que sus ejemplos validan y que nombra la
+versión vigente del formato. Leela completa antes de tocar un documento, y
+editala a ella si el formato cambia; no dupliques su contenido acá.
 
-Por eso el documento tiene tres capas separadas que se relacionan **solo por ID**:
+Referencias formales:
 
-| Objetivo                                   | Edita        | No toques           |
-| ------------------------------------------ | ------------ | ------------------- |
-| Cambiar el negocio (estados, transiciones, eventos, guards, acciones, inicial, finales) | `machine` | `layout`, `styles` |
-| Mover elementos en el lienzo               | `layout`     | `machine`, `styles` |
-| Cambiar colores, curvatura o estilo de línea | `styles`   | `machine`, `layout` |
+- Schema: [`docs/schema/state-machine-document.schema.json`](docs/schema/state-machine-document.schema.json),
+  generado con `npm run schema` desde [`src/domain/schema.ts`](src/domain/schema.ts).
+- Tipos: [`src/domain/types.ts`](src/domain/types.ts).
+- Ejemplos: [`examples/`](examples/).
 
-**No modifiques `layout` cuando el objetivo es cambiar la lógica de negocio.**
-Si agregas un estado y no le das coordenadas, la UI se las asigna
-automáticamente (solo a él; los demás no se mueven). Si borras un estado,
-puedes borrar sus entradas de `layout`/`styles` o dejar que la UI las elimine:
-lo hará y lo informará como "metadata huérfana".
-
-## Formato del documento
-
-```json
-{
-  "version": 2,
-  "machine": {
-    "id": "pedido",
-    "name": "Ciclo de vida de un pedido",
-    "initialStateId": "nuevo",
-    "states": [
-      { "id": "nuevo", "label": "Nuevo", "type": "normal", "parentId": "parent-1", "subtitle": "Pedido creado", "description": "Se crea al confirmar el carrito. Reserva stock por 30 minutos." },
-      { "id": "pagado", "label": "Pagado", "type": "normal" },
-      { "id": "cancelado", "label": "Cancelado", "type": "final" }
-    ],
-    "parents": [{ "id": "parent-1", "label": "Pedido abierto" }],
-    "transitions": [
-      { "id": "t-pagar", "from": "nuevo", "to": "pagado", "label": "Pagar", "event": "PAGAR", "condition": null, "action": "registrarPago", "description": "La pasarela confirma el cobro y se emite la factura." },
-      { "id": "t-cancelar", "from": "nuevo", "to": "cancelado", "event": "CANCELAR" }
-    ]
-  },
-  "layout": {
-    "states": {
-      "nuevo": { "x": 200, "y": 200 },
-      "pagado": { "x": 400, "y": 200 }
-    }
-  },
-  "styles": {
-    "defaults": { "stateColor": "#000000", "transitionColor": "#000000" },
-    "states": { "cancelado": { "color": "#C0392B" } },
-    "transitions": { "t-cancelar": { "color": "#C0392B", "curvature": 0.25, "lineStyle": "dashed" } }
-  }
-}
-```
-
-### `machine` (semántica; obligatoria)
-
-- `id`, `name`: identifican la máquina.
-- `initialStateId`: ID de un estado existente. Solo puede ser `null` si no hay estados.
-- `states[]`: `{ id, label, type?, subtitle?, description?, parentId? }`. `type` es `"normal"` (por defecto) o `"final"`.
-  Puede haber varios estados finales. El estado inicial **no** se marca con `type`; se define en `initialStateId`.
-- `parentId` referencia un estado padre de `machine.parents`. Ausente = subestado suelto.
-- `transitions[]`: `{ id, from, to, label?, event?, condition?, action?, description? }`.
-  - `from` y `to` son IDs de estados existentes. La flecha siempre apunta a `to`.
-  - Toda transición es unidireccional. Una relación en ambos sentidos son **dos transiciones** con IDs distintos.
-  - `from === to` es válido (auto-transición; se dibuja como un bucle).
-  - `label` es el texto visible; `event`, `condition` (guard) y `action` son propiedades funcionales.
-  - `null` y `""` en campos opcionales equivalen a "ausente".
-
-### `subtitle` vs. `description` (no confundirlos)
-
-| Campo | Quién lo tiene | Se dibuja | Para qué |
-| --- | --- | --- | --- |
-| `label` | estados y transiciones | sí | nombre corto: dentro del círculo, o sobre la flecha |
-| `subtitle` | solo estados | sí, debajo del nodo | aclaración de una línea, del largo de un renglón |
-| `description` | estados y transiciones | **no** | el detalle de negocio, tan largo como haga falta |
-
-`description` es el lugar correcto para dejar reglas, criterios, plazos,
-responsables o cualquier explicación extensa: no ensucia el diagrama porque no
-se dibuja, y la persona la lee en la barra lateral al seleccionar el elemento.
-Si el texto tiene que verse en el gráfico, va en `label` o en `subtitle`.
-
-### Jerarquía: subestados y estados padre
-
-Todo lo que está en `machine.states` es un **subestado**: es lo que se dibuja en
-el lienzo. Los **estados padre** viven aparte, en `machine.parents` y agrupan
-subestados:
-
-```json
-"machine": {
-  "states": [
-    { "id": "state-1", "label": "Ingreso", "parentId": "parent-1" },
-    { "id": "state-2", "label": "Suelto" }
-  ],
-  "parents": [{ "id": "parent-1", "label": "Admisibilidad" }]
-}
-```
-
-- `parents[]`: `{ id, label, description? }`. Sus ids comparten espacio de
-  nombres con estados y transiciones: deben ser únicos en todo el documento.
-- `state.parentId` referencia un **padre**, nunca otro estado. Apuntar a un
-  estado es un error de validación.
-- Un subestado sin `parentId` es válido: queda suelto.
-- Los padres son **planos**: agrupan subestados pero no se anidan entre sí.
-- Los padres no participan de las transiciones ni tienen entrada en `layout`.
-  Poner un padre en `from` o `to` es un error.
-- `machine.parents` puede omitirse: se asume vacío.
-
-Eliminar un padre **no borra sus subestados**: quedan sueltos. Un padre sin
-subestados se acepta, pero se avisa.
-
-Cómo se ve un padre es asunto del editor, no del documento: dibuja una
-envolvente alrededor de sus subestados a partir de las posiciones de estos, y
-puede **plegarlo** en un único nodo (las transiciones que cruzan el borde se
-dibujan hacia ese nodo). Nada de eso tiene representación en el JSON: no hay
-entrada de layout para el padre ni bandera de plegado, y las transiciones
-siguen referenciando subestados. No agregues campos para expresarlo.
-
-### `layout` (presentación; opcional)
-
-- `states`: `{ [stateId]: { x, y } }` con el **centro** del nodo en píxeles del lienzo. El eje Y crece hacia abajo.
-- `viewport` (opcional): cámara `{ x, y, zoom }`. Ignóralo.
-- Puede omitirse por completo o contener solo algunos estados. Lo que falte lo completa la UI.
-
-### `styles` (presentación; opcional)
-
-- `defaults.stateColor` / `defaults.transitionColor`: color base (por defecto negro).
-- `states[id].color`, `transitions[id].color`: color CSS (usa hex). **El color no tiene semántica**: una transición roja no significa "error" salvo que `machine` lo diga (por ejemplo con `event` o `label`). No infieras negocio a partir de colores.
-- `transitions[id].curvature`: número en `[-1, 1]`. `0` es recta; el signo elige el lado; ausente = automática (la UI separa sola las transiciones paralelas). En auto-transiciones controla la posición angular del bucle (0 arriba, 0.5 derecha, -0.5 izquierda, ±1 abajo).
-- `transitions[id].lineStyle`: `"solid"` (por defecto) o `"dashed"`.
-
-## Reglas de IDs
-
-1. Todo estado y toda transición tiene un `id` no vacío, **único en todo el documento** (un estado y una transición no pueden compartir id).
-2. El ID es la identidad. Las relaciones (`from`, `to`, `initialStateId`, claves de `layout` y `styles`) se expresan **solo** por ID, nunca por etiqueta, posición o índice.
-3. No cambies IDs existentes salvo que sea el objetivo. Si renombras uno, propaga el cambio a `from`/`to`, `initialStateId`, `layout.states` y `styles.*`.
-4. Para IDs nuevos usa cadenas legibles y estables (`state-42`, `t-pagado-enviado`, `revisando`). El generador de la UI usa `state-N` / `transition-N`.
-
-## Recetas
-
-### Agregar un estado y conectarlo
-
-1. Añade `{ "id": "revision", "label": "Revisión" }` a `machine.states`.
-2. Añade las transiciones necesarias a `machine.transitions` (`from`/`to` por ID).
-3. **No agregues nada a `layout`.** La UI coloca el estado cerca de sus vecinos.
-4. Guarda el JSON.
-
-Resultado esperado: todos los estados existentes conservan exactamente sus coordenadas; el nuevo aparece posicionado y el usuario puede moverlo.
-
-### Eliminar un estado
-
-1. Quita el estado de `machine.states`.
-2. Quita (o reasigna) todas las transiciones cuyo `from` o `to` lo referencien: una referencia colgante es un **error de validación**.
-3. Si era el inicial, asigna otro `initialStateId`.
-4. Opcionalmente quita `layout.states[id]`, `styles.states[id]` y `styles.transitions[...]` de las transiciones eliminadas. Si no lo haces, la UI las elimina y lo informa.
-
-### Cambiar el sentido de una transición
-
-Intercambia `from` y `to` (o crea una transición nueva en sentido contrario con otro id). No toques `layout`.
-
-### Marcar estados finales / cambiar el inicial
-
-- Final: `"type": "final"` en el estado.
-- Inicial: cambia `machine.initialStateId`. Debe apuntar a un estado existente.
-
-### Colorear o curvar
-
-Edita solo `styles.transitions[id]` o `styles.states[id]`. Cambiar color o curvatura **jamás** modifica `from`, `to` ni ninguna propiedad de `machine`.
-
-### Reorganizar el diagrama
-
-No lo hagas desde el JSON. Si el usuario quiere un relayout global, tiene el botón "Reorganizar" en la UI. Recalcular todas las coordenadas destruye el trabajo manual de acomodo.
-
-## Validación: qué se rechaza y qué se avisa
-
-Errores (el documento no se acepta):
-
-- claves desconocidas (por ejemplo un typo `lable`): los objetos son estrictos;
-- `id` vacío o duplicado;
-- transición sin `from` o sin `to`, o que referencia un estado inexistente;
-- `parentId` que no referencia un estado padre existente;
-- id de estado padre vacío o duplicado;
-- `initialStateId` inexistente, o `null` habiendo estados;
-- posiciones no numéricas; `curvature` fuera de `[-1, 1]`; `version` distinta de `2` (salvo la `1`, que se migra sola).
-
-Advertencias (se aceptan, se muestran, y la reconciliación corrige las de metadata):
-
-- entradas de `layout.states`, `styles.states` o `styles.transitions` que apuntan a elementos inexistentes (se eliminan y se informa);
-- máquina sin estados finales; estados inalcanzables desde el inicial; estado final con transiciones salientes.
-
-Comprueba tu trabajo sin abrir la UI:
+## Comprobar un documento sin abrir la UI
 
 ```bash
 npm run validate -- ruta/al/documento.json
 ```
 
-## Lista de comprobación antes de entregar un JSON
+## Cómo consume la UI un documento
 
-- [ ] `version` es `1` y las claves de primer nivel son `machine`, `layout` (opcional) y `styles` (opcional).
-- [ ] Todos los IDs son únicos y no vacíos.
-- [ ] Todo `from`/`to` e `initialStateId` apuntan a estados existentes.
-- [ ] Todo `parentId` apunta a un id de `machine.parents`, no a un estado.
-- [ ] No inventaste coordenadas para cambiar el negocio, ni moviste estados existentes.
-- [ ] No usaste el color para expresar semántica; lo que significa algo está en `machine`.
-- [ ] No añadiste campos que no existen en el schema.
-- [ ] `npm run validate -- archivo.json` no muestra errores.
+1. Si el documento declara `version: 1`, se migra a la 2 (el `description` de
+   los estados pasa a `subtitle`). La detección es por forma, no solo por el
+   número de versión.
+2. `parseDocumentJson` valida la forma (schema Zod estricto) y las referencias.
+3. `reconcileDocument` asigna posición a los estados sin `layout` (solo a
+   ellos) y elimina metadata huérfana, informando ambas cosas.
+4. El adaptador (`src/ui/adapter`) convierte el documento a nodos y aristas de
+   la librería gráfica; calcula anclajes, curvas, puntas de flecha,
+   envolventes de los padres y el plegado. Nada de eso se guarda.
 
-## Cómo consume la UI un documento (para entender qué pasa después)
+Si en el futuro se cambia la librería gráfica, el formato no cambia.
 
-1. Si el documento declara `version: 1`, se migra a la 2 (el `description` de los estados pasa a `subtitle`).
-2. `parseDocumentJson` valida la forma (schema Zod) y las referencias.
-3. `reconcileDocument` asigna posición a los estados sin `layout` (solo a ellos) y elimina metadata huérfana, informando ambas cosas.
-4. El adaptador convierte el documento a nodos y aristas de la librería gráfica; calcula puntos de salida/entrada, curvas y puntas de flecha. Nada de eso se guarda.
+## Cambios al código
 
-Si en el futuro se cambia la librería gráfica, este formato no cambia.
+- Arquitectura y decisiones: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+- Antes de cambiar el formato: bumpear `DOCUMENT_VERSION`, escribir la
+  migración en el mismo cambio, actualizar `docs/guia-llm.md` y regenerar el
+  schema.
+- Los invariantes (mover no cambia transiciones, agregar no mueve, etc.) tienen
+  tests en `tests/`. `npm test`, `npm run typecheck` y `npm run build` deben
+  pasar.
+- La guía de uso para personas es [`docs/guia-humanos.md`](docs/guia-humanos.md);
+  si cambia la interfaz, actualizala. También se incrusta en la aplicación.

@@ -6,7 +6,9 @@ presentación (`layout`) y los estilos (`styles`). Está pensada para que un
 agente LLM pueda modificar máquinas editando el JSON de negocio sin tocar el
 dibujo: la interfaz posiciona lo nuevo y conserva exactamente lo que ya estaba.
 
-- Guía para agentes: [`AGENTS.md`](AGENTS.md)
+- Guía de uso (la misma que muestra el botón "Ayuda"): [`docs/guia-humanos.md`](docs/guia-humanos.md)
+- Guía para LLMs (formato del JSON y reglas para editarlo; también en "Ayuda"): [`docs/guia-llm.md`](docs/guia-llm.md)
+- Notas para agentes que trabajan sobre este repositorio: [`AGENTS.md`](AGENTS.md)
 - Arquitectura y decisiones: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - Schema formal (JSON Schema generado desde Zod): [`docs/schema/state-machine-document.schema.json`](docs/schema/state-machine-document.schema.json)
 - Tipos TypeScript: [`src/domain/types.ts`](src/domain/types.ts)
@@ -24,10 +26,24 @@ Otros comandos:
 ```bash
 npm test           # tests de invariantes (Vitest)
 npm run typecheck  # TypeScript
-npm run build      # build de producción en dist/
+npm run build      # versión estática: dist/index.html, un solo archivo
 npm run schema     # regenera docs/schema/*.schema.json desde src/domain/schema.ts
 npm run validate -- examples/simple.json   # valida archivos JSON desde la terminal
 ```
+
+## Versión estática: compartir y desplegar
+
+`npm run build` deja en `dist/` **un único archivo**, `index.html`, con todo
+adentro: código, estilos, ejemplos y las dos guías. No necesita servidor ni
+red, y no manda datos a ningún lado; las máquinas guardadas quedan en el
+navegador de cada persona, y se comparten exportando el JSON.
+
+- **Pasarla a colegas**: mandá `dist/index.html`. Se abre con doble clic.
+- **Netlify**: arrastrá la carpeta `dist/` en [app.netlify.com/drop](https://app.netlify.com/drop),
+  o conectá el repositorio: el `netlify.toml` incluido ya indica el comando
+  de build y la carpeta a publicar. Cualquier otro hosting estático sirve igual.
+
+`dist/` no se versiona: se regenera con el comando.
 
 ## El documento
 
@@ -88,26 +104,15 @@ npm run validate -- examples/simple.json   # valida archivos JSON desde la termi
 
 ## El editor
 
-| Acción | Cómo |
-| --- | --- |
-| Crear un estado | Doble clic en el lienzo, o botón "+ Estado" |
-| Mover un estado | Arrastrar el círculo (solo cambia `layout`) |
-| Crear una transición | Arrastrar desde el anillo exterior de un estado hasta otro (o el mismo, para un bucle); o desde el inspector del estado, "Nueva transición hacia…" |
-| Editar estado / transición | Clic para seleccionar. La barra lateral queda reservada al elemento seleccionado y separa sus propiedades en dos pestañas: **Negocio** (etiqueta, subtítulo, descripción, tipo, inicial, `from`/`to`, evento, condición, acción) y **Estilo** (color, curvatura, estilo de línea, y la posición de layout) |
-| Jerarquía | Cada estado del lienzo es un subestado. En su pestaña Negocio, "Pertenece a" elige un estado padre ya existente o crea uno en el momento, sin salir del panel. El padre se dibuja como una envolvente alrededor de sus subestados (sigue a los subestados cuando se mueven; si encierra visualmente a un estado ajeno, se marca en naranja). Se administran desde el inspector de la máquina, que lista cada uno con sus subestados. Eliminar un padre no borra sus subestados: quedan sueltos |
-| Plegar un padre | Botón ⊟ junto al nombre de la envolvente, o "Plegar" en la lista de padres. Los subestados desaparecen y en el centro de la figura queda un solo nodo con el nombre del padre y la cantidad de subestados. Las transiciones que entran o salen del grupo se redirigen a ese nodo; las internas se ocultan. Arrastrar el nodo plegado mueve a todos sus subestados manteniendo sus distancias (un solo paso de deshacer). ⊞ o "Desplegar" lo vuelve a abrir. Plegar es solo una vista: no cambia el documento y se pierde al recargar |
-| IDs | Se generan solos (`state-N`, `transition-N`) y son únicos en todo el documento. El inspector los muestra pero no deja editarlos: son identidad interna, no un nombre. Para cambiar uno, editá el JSON |
-| Eliminar | Supr / Retroceso con la selección, o botón "Eliminar" en el inspector. Eliminar un estado elimina sus transiciones; el estado inicial no puede eliminarse hasta marcar otro |
-| Curvatura | Slider, botones −/+, "Recta" o "Auto" en el inspector de la transición |
-| Seleccionar varios estados | Arrastrar con el botón izquierdo sobre el lienzo vacío para dibujar una región. Alcanza con que toque un estado. La región selecciona **solo estados**, nunca transiciones |
-| Mover varios estados | Con varios seleccionados, arrastrar cualquiera de ellos: todos se desplazan el mismo delta y conservan sus distancias relativas. Es una sola operación de layout y un solo paso de deshacer |
-| Desplazar la vista | Arrastrar con el botón derecho sobre el lienzo vacío. El menú contextual del navegador queda suprimido sobre el lienzo. Solo cambia la cámara: ni el modelo ni las posiciones de los estados se tocan |
-| Deshacer / rehacer | Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z |
-| Reorganizar todo | Botón "Reorganizar" (auto-layout con Dagre). Es la única operación que mueve todos los estados, requiere confirmación y se puede deshacer |
-| JSON | Botón "JSON" de la barra superior: el documento completo es global, así que se abre desde ahí y no desde la barra lateral. Abrirlo deselecciona lo que hubiera seleccionado, y volver a seleccionar un elemento lo cierra. Permite ver, editar y aplicar con validación previa; copiar; descargar. El contador naranja son los avisos de validación |
-| Guardar / abrir | "Guardar" persiste en `localStorage` por `machine.id`; "Abrir…" lista guardadas y ejemplos; "Recargar" vuelve a la última versión cargada o guardada. Hay autosave de la copia de trabajo |
-| Importar / exportar | Archivos JSON con el formato de arriba. Un archivo exportado es autocontenido: trae `machine`, `layout` y `styles` juntos |
-| Soltar un archivo | Arrastrar un `.json` sobre el lienzo lo importa. El lienzo se resalta mientras el archivo está encima. Si el archivo no es válido, se informa el error y la máquina abierta queda intacta. Soltarlo fuera del lienzo no hace nada: el navegador tiene bloqueada la navegación al archivo |
+Cómo se usa, acción por acción, está en la [guía de uso](docs/guia-humanos.md),
+que la aplicación muestra con el botón **Ayuda**. Ese mismo diálogo tiene la
+[guía para LLMs](docs/guia-llm.md) con un botón "Copiar guía + máquina
+actual": deja en el portapapeles las instrucciones y el JSON abierto, listos
+para pegar en un chat y pedir cambios; la respuesta se aplica desde el panel
+JSON, con validación previa.
+
+Las dos guías se incrustan en el build desde `docs/`, así que la versión
+estática las lleva consigo y no hay dos copias que mantener.
 
 ### Versiones del formato
 
@@ -131,7 +136,7 @@ src/ui/adapter  Documento -> React Flow (geometría de flechas, curvatura autom�
 src/ui/store    estado del editor (Zustand), historial, persistencia local
 src/ui/components  lienzo, nodo, arista, inspector, panel JSON, barra
 tests/          invariantes, operaciones, validación, posicionamiento, geometría, serialización
-docs/           arquitectura y JSON Schema
+docs/           guías de uso y para LLMs (se incrustan en la app), arquitectura y JSON Schema
 examples/       documentos de ejemplo (uno inspirado en la imagen de referencia, uno sin layout)
 scripts/        generación del schema y validador de línea de comandos
 ```
@@ -154,5 +159,6 @@ scripts/        generación del schema y validador de línea de comandos
 
 ## Stack
 
-TypeScript, React 19, Vite 7, [`@xyflow/react`](https://reactflow.dev) 12 (lienzo),
-Zod 4 (schema y JSON Schema), `@dagrejs/dagre` (auto-layout explícito), Zustand, Vitest.
+TypeScript, React 19, Vite 7 (+ `vite-plugin-singlefile` para el build de un solo archivo),
+[`@xyflow/react`](https://reactflow.dev) 12 (lienzo), Zod 4 (schema y JSON Schema),
+`@dagrejs/dagre` (auto-layout explícito), Zustand, `marked` (guías en Markdown), Vitest.

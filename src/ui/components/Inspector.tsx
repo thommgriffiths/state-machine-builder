@@ -193,6 +193,7 @@ function MachineInspector() {
         <li>Arrastrar con el botón izquierdo sobre el lienzo vacío: región de selección (solo estados).</li>
         <li>Con varios estados seleccionados, arrastrar uno los mueve a todos manteniendo sus distancias.</li>
         <li>Arrastrar con el botón derecho sobre el lienzo vacío: desplazar la vista. Rueda: zoom.</li>
+        <li>Guía completa, y cómo trabajar con un LLM: botón "Ayuda" de la barra superior.</li>
       </ul>
     </div>
   );

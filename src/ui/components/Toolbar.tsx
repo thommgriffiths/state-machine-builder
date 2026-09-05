@@ -14,6 +14,7 @@ import {
 } from '../store/documentActions';
 import { useEditorStore, useIsDirty } from '../store/editorStore';
 import { listSaved, type SavedEntry } from '../store/persistence';
+import { HelpDialog, type HelpTab } from './HelpDialog';
 
 export function Toolbar() {
   const name = useEditorStore((s) => s.document.machine.name);
@@ -33,6 +34,7 @@ export function Toolbar() {
   const { fitView, screenToFlowPosition } = useReactFlow<StateFlowNode, TransitionFlowEdge>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saved, setSaved] = useState<SavedEntry[]>([]);
+  const [help, setHelp] = useState<HelpTab | null>(null);
 
   const refreshSaved = () => setSaved(listSaved());
   useEffect(refreshSaved, [dirty]);
@@ -152,7 +154,17 @@ export function Toolbar() {
         >
           JSON {issueCount > 0 && <span className="button__badge">{issueCount}</span>}
         </button>
+        <button
+          type="button"
+          className={'button' + (help !== null ? ' is-active' : '')}
+          onClick={() => setHelp('personas')}
+          title="Guía de uso y guía para trabajar con un LLM"
+        >
+          Ayuda
+        </button>
       </div>
+
+      {help !== null && <HelpDialog tab={help} onTabChange={setHelp} onClose={() => setHelp(null)} />}
     </header>
   );
 }

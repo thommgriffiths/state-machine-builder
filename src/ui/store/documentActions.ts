@@ -111,12 +111,16 @@ export function applyJsonText(text: string): ParseResult {
 
 export function exportToFile(): void {
   const store = useEditorStore.getState();
-  const json = serializeDocument(store.document);
-  const blob = new Blob([json], { type: 'application/json' });
+  downloadTextFile(safeFileName(store.document.machine.id) + '.json', serializeDocument(store.document), 'application/json');
+}
+
+/** Descarga un texto como archivo, con el mecanismo del navegador (sin servidor). */
+export function downloadTextFile(fileName: string, text: string, mimeType: string): void {
+  const blob = new Blob([text], { type: mimeType + ';charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = safeFileName(store.document.machine.id) + '.json';
+  anchor.download = fileName;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();

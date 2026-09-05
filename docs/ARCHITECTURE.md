@@ -40,7 +40,7 @@ src/
 │   │   ├── groups.ts       envolvente de cada estado padre (hull de sus subestados), centroide, intrusos
 │   │   └── constants.ts    radio del nodo, tamaño de flecha, etc.
 │   ├── store/              Zustand: documento inmutable, selección, padres plegados, deshacer/rehacer, avisos, persistencia
-│   └── components/         React: lienzo, nodo, arista, envolventes, nodo plegado, inspector, panel JSON, barra
+│   └── components/         React: lienzo, nodo, arista, envolventes, nodo plegado, inspector, panel JSON, barra, ayuda
 └── examples/               registro de los JSON de /examples
 ```
 
@@ -204,6 +204,21 @@ una columna nueva a la derecha del diagrama.
 - Persistencia en `localStorage`: máquinas guardadas por `machine.id` y una copia
   de trabajo con autosave para no perder cambios al recargar. Import/Export son
   archivos JSON con el mismo formato.
+
+### Guías incrustadas y build de un solo archivo
+
+Las guías (`docs/guia-humanos.md`, `docs/guia-llm.md`) son la única copia:
+legibles en el repositorio y, vía `import ... ?raw`, incrustadas en la
+aplicación y convertidas a HTML con `marked` en el diálogo de Ayuda. Un test
+comprueba que los JSON que muestra la guía para LLMs validan y que nombra la
+versión vigente del formato, para que no se desactualicen en silencio.
+
+El build (`vite-plugin-singlefile`) produce un único `dist/index.html` con
+todo inline. La razón es la portabilidad: los navegadores bloquean los
+módulos ES externos cuando la página se abre desde `file://`, pero no los
+inline, así que un solo archivo se abre con doble clic, se manda por correo y
+se sube a cualquier hosting estático. Se renuncia al code splitting porque no
+hay servidor del que cargar trozos.
 
 ## 4. Invariantes y dónde se verifican
 

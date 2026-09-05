@@ -1,0 +1,5 @@
+# Despliegue en Netlify conectando el repositorio. Alternativa sin repositorio:
+# arrastrar la carpeta dist/ (un solo index.html) en app.netlify.com/drop.
+[build]
+  command = "npm run build"
+  publish = "dist"
