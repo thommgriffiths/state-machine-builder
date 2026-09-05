@@ -22,6 +22,7 @@ import type { Position } from '../../domain';
 import { NODE_BOX, documentToFlow, nodePositionToCenter, type StateFlowNode, type TransitionFlowEdge } from '../adapter';
 import { importFromText } from '../store/documentActions';
 import { useEditorStore } from '../store/editorStore';
+import { ParentGroups } from './ParentGroups';
 import { StateNode } from './StateNode';
 import { TransitionEdge } from './TransitionEdge';
 
@@ -273,6 +274,7 @@ export function Canvas() {
         nodeOrigin={[0, 0]}
       >
         <Background variant={BackgroundVariant.Dots} gap={24} size={1.2} color="#c9c9c9" />
+        <ParentGroups />
         <Controls showInteractive={false} />
         <MiniMap pannable zoomable nodeColor={(node) => (node.data as { color?: string }).color ?? '#000'} nodeStrokeWidth={0} />
       </ReactFlow>

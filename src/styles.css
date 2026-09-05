@@ -840,3 +840,69 @@ textarea.input {
   justify-content: space-between;
   gap: 10px;
 }
+
+/* Englobador de un estado padre: se dibuja detrás de sus subestados. */
+.parent-group {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Detrás de nodos y aristas, y sin capturar eventos: no debe interferir con
+     la selección por región ni con el arrastre. */
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* El contorno sale de pintar la envolvente dos veces: el trazo grueso de abajo
+   asoma como borde alrededor del relleno. */
+.parent-group__border {
+  fill: #a9c3da;
+  stroke: #a9c3da;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.parent-group__fill {
+  fill: #e4ecf4;
+  stroke: #e4ecf4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.parent-group--conflict .parent-group__border {
+  fill: #e0b070;
+  stroke: #e0b070;
+}
+
+.parent-group--conflict .parent-group__fill {
+  fill: #faf1e2;
+  stroke: #faf1e2;
+}
+
+.parent-group__label {
+  position: absolute;
+  top: 4px;
+  left: 12px;
+  pointer-events: all;
+  padding: 2px 9px;
+  border: 1px solid rgba(31, 111, 178, 0.45);
+  border-radius: 6px;
+  background: var(--panel);
+  color: #14507f;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.parent-group__label:hover {
+  border-color: var(--accent);
+}
+
+.parent-group--conflict .parent-group__label {
+  border-color: #c8912f;
+  color: #8a5b09;
+}
+
+.parent-group__warn {
+  color: #c8912f;
+}
