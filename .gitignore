@@ -6,3 +6,6 @@ dist
 
 # Insumos de referencia que no se versionan
 first-sample.html
+
+# Estado local de la CLI de Netlify (vínculo con el sitio)
+.netlify

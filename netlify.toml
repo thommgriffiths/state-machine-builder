@@ -3,3 +3,7 @@
 [build]
   command = "npm run build"
   publish = "dist"
+
+[build.environment]
+  # Vite 7 necesita Node 20.19+ o 22.12+. Se fija para no depender del default de Netlify.
+  NODE_VERSION = "22"
