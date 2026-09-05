@@ -204,6 +204,8 @@ function ParentList() {
   const updateParentFields = useEditorStore((s) => s.updateParentFields);
   const deleteParent = useEditorStore((s) => s.deleteParent);
   const selectState = useEditorStore((s) => s.selectState);
+  const collapsedIds = useEditorStore((s) => s.collapsedParentIds);
+  const toggleCollapsed = useEditorStore((s) => s.toggleParentCollapsed);
   const { parents, states } = document.machine;
 
   if (parents.length === 0) {
@@ -229,14 +231,26 @@ function ParentList() {
                   </button>
                 ))}
               </span>
-              <button
-                type="button"
-                className="button button--small button--danger"
-                title="Eliminar el estado padre. Sus subestados quedan sueltos, no se borran."
-                onClick={() => deleteParent(parent.id)}
-              >
-                Eliminar
-              </button>
+              <span className="parent-row__actions">
+                {subestados.length > 0 && (
+                  <button
+                    type="button"
+                    className="button button--small"
+                    title={collapsedIds.includes(parent.id) ? 'Volver a mostrar sus subestados' : 'Reemplazar sus subestados por un solo nodo'}
+                    onClick={() => toggleCollapsed(parent.id)}
+                  >
+                    {collapsedIds.includes(parent.id) ? 'Desplegar' : 'Plegar'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="button button--small button--danger"
+                  title="Eliminar el estado padre. Sus subestados quedan sueltos, no se borran."
+                  onClick={() => deleteParent(parent.id)}
+                >
+                  Eliminar
+                </button>
+              </span>
             </div>
           </div>
         );

@@ -22,7 +22,13 @@ const BORDE = 1.5;
 export function ParentGroups() {
   const document = useEditorStore((s) => s.document);
   const selectState = useEditorStore((s) => s.selectState);
-  const groups = useMemo(() => computeParentGroups(document), [document]);
+  const collapsedIds = useEditorStore((s) => s.collapsedParentIds);
+  const toggle = useEditorStore((s) => s.toggleParentCollapsed);
+  const groups = useMemo(() => {
+    const collapsed = new Set(collapsedIds);
+    // Un padre plegado se dibuja como nodo, no como envolvente.
+    return computeParentGroups(document).filter((g) => !collapsed.has(g.parentId));
+  }, [document, collapsedIds]);
   if (groups.length === 0) return null;
 
   return (
@@ -34,7 +40,9 @@ export function ParentGroups() {
           <div
             key={group.parentId}
             className={'parent-group' + (conflicto ? ' parent-group--conflict' : '')}
-            style={{ transform: 'translate(' + group.bounds.x + 'px, ' + group.bounds.y + 'px)' }}
+            style={{
+              transform: 'translate(' + group.bounds.x + 'px, ' + group.bounds.y + 'px)',
+            }}
           >
             <svg width={group.bounds.width} height={group.bounds.height} style={{ overflow: 'visible' }}>
               <g transform={'translate(' + group.pad + ', ' + group.pad + ')'}>
@@ -42,25 +50,43 @@ export function ParentGroups() {
                 <path className="parent-group__fill" d={path} strokeWidth={group.pad * 2} />
               </g>
             </svg>
-            <button
-              type="button"
-              className="parent-group__label nodrag nopan"
-              title={
-                conflicto
-                  ? 'Este englobador contiene visualmente a ' + group.intruders.join(', ') + ', que no le pertenece(n)'
-                  : 'Estado padre · ' + group.substateCount + ' subestado(s)'
-              }
-              onClick={(event) => {
-                event.stopPropagation();
-                // El padre no es un nodo seleccionable: llevar al primer
-                // subestado es la forma más directa de llegar a su inspector.
-                const first = document.machine.states.find((s) => s.parentId === group.parentId);
-                if (first) selectState(first.id);
-              }}
-            >
-              {group.label}
-              {conflicto && <span className="parent-group__warn" aria-label="conflicto"> ⚠</span>}
-            </button>
+            <div className="parent-group__header">
+              <button
+                type="button"
+                className="parent-group__label nodrag nopan"
+                title={
+                  conflicto
+                    ? 'Este englobador contiene visualmente a ' + group.intruders.join(', ') + ', que no le pertenece(n)'
+                    : 'Estado padre · ' + group.substateCount + ' subestado(s)'
+                }
+                onClick={(event) => {
+                  event.stopPropagation();
+                  // El padre no es un nodo seleccionable: llevar al primer
+                  // subestado es la forma más directa de llegar a su inspector.
+                  const first = document.machine.states.find((s) => s.parentId === group.parentId);
+                  if (first) selectState(first.id);
+                }}
+              >
+                {group.label}
+                {conflicto && (
+                  <span className="parent-group__warn" aria-label="conflicto">
+                    {' '}
+                    ⚠
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                className="parent-group__collapse nodrag nopan"
+                title="Plegar: reemplaza los subestados por un solo nodo"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  toggle(group.parentId);
+                }}
+              >
+                ⊟
+              </button>
+            </div>
           </div>
         );
       })}

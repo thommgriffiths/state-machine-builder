@@ -36,10 +36,11 @@ src/
 ├── ui/
 │   ├── adapter/            Documento -> React Flow. Único lugar que conoce la librería gráfica
 │   │   ├── geometry.ts     curvas, puntos de anclaje, puntas de flecha, bucles
-│   │   ├── toFlow.ts       nodos/aristas a partir del documento; curvatura automática
+│   │   ├── toFlow.ts       nodos/aristas a partir del documento; curvatura automática; padres plegados
+│   │   ├── groups.ts       envolvente de cada estado padre (hull de sus subestados), centroide, intrusos
 │   │   └── constants.ts    radio del nodo, tamaño de flecha, etc.
-│   ├── store/              Zustand: documento inmutable, selección, deshacer/rehacer, avisos, persistencia
-│   └── components/         React: lienzo, nodo, arista, inspector, panel JSON, barra
+│   ├── store/              Zustand: documento inmutable, selección, padres plegados, deshacer/rehacer, avisos, persistencia
+│   └── components/         React: lienzo, nodo, arista, envolventes, nodo plegado, inspector, panel JSON, barra
 └── examples/               registro de los JSON de /examples
 ```
 
@@ -92,6 +93,27 @@ Adaptaciones relevantes:
   `labelAnchor`, el vector hacia el lado exterior de la curva, que hoy no se
   usa para posicionar pero describe la geometría por si conviene volver a
   correr la etiqueta al costado.
+
+### Estados padre: envolvente y plegado
+
+El padre no tiene posición: su figura es la envolvente convexa de las huellas de
+sus subestados (nodo más subtítulo), engrosada `GROUP_PAD`. Se dibuja por
+`ViewportPortal`, en coordenadas del lienzo pero fuera del grafo de React Flow,
+así no participa del arrastre, la selección por región ni el borrado. Si un
+estado ajeno queda dentro de la figura se detecta (`intruders`) y se marca.
+
+Plegar un padre es **estado de la vista** (`collapsedParentIds` en el store):
+no está en el documento, no entra al historial y se descarta al cargar otra
+máquina. Al plegar, el adaptador omite los subestados, agrega un nodo de tipo
+`parent` en el centroide del polígono de la envolvente (fórmula del
+"shoelace", barata y exacta para el polígono), y remapea las transiciones:
+las que cruzan el borde apuntan al nodo plegado y las internas no se dibujan.
+La curvatura automática se calcula sobre los extremos remapeados, porque varias
+transiciones pueden pasar a compartir extremos. El nodo plegado es arrastrable
+pero no seleccionable ni borrable; arrastrarlo traslada a todos los subestados
+el mismo delta (`substatePositionsForGroupMove`), con lo que el centroide
+termina exactamente donde se soltó. Lleva un handle invisible porque React
+Flow no dibuja aristas hacia un nodo sin handles.
 
 ### Dagre para el auto-layout explícito
 

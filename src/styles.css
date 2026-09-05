@@ -878,10 +878,17 @@ textarea.input {
   stroke: #faf1e2;
 }
 
-.parent-group__label {
+/* Etiqueta y botón de plegar, en la esquina superior izquierda de la forma. */
+.parent-group__header {
   position: absolute;
   top: 4px;
   left: 12px;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.parent-group__label {
   pointer-events: all;
   padding: 2px 9px;
   border: 1px solid rgba(31, 111, 178, 0.45);
@@ -905,4 +912,136 @@ textarea.input {
 
 .parent-group__warn {
   color: #c8912f;
+}
+
+.parent-row__actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.parent-group__collapse {
+  pointer-events: all;
+  width: 22px;
+  padding: 0;
+  border: 1px solid rgba(31, 111, 178, 0.45);
+  border-radius: 6px;
+  background: var(--panel);
+  color: #14507f;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.parent-group__collapse:hover {
+  border-color: var(--accent);
+}
+
+/* ------------------------------------------------------ nodo padre plegado */
+
+.react-flow__node-parent {
+  cursor: grab;
+}
+
+.react-flow__node-parent.dragging {
+  cursor: grabbing;
+}
+
+.parent-node {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  --node-color: #000;
+}
+
+.react-flow__handle.parent-node__handle {
+  /* Solo existe para que React Flow acepte aristas hacia este nodo. */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  min-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.parent-node__body {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2.5px dashed var(--node-color);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--node-color);
+  z-index: 2;
+}
+
+/* Un segundo círculo desplazado sugiere que adentro hay varios estados apilados. */
+.parent-node__stack {
+  position: absolute;
+  inset: -2.5px;
+  border-radius: 50%;
+  border: 2.5px dashed var(--node-color);
+  transform: translate(5px, 5px);
+  opacity: 0.35;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.parent-node__label {
+  padding: 0 3px;
+  font-weight: 600;
+  line-height: 1.1;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  user-select: none;
+}
+
+.parent-node__count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* Arriba a la izquierda, simétrico al contador; abajo pisaría el subtítulo. */
+.parent-node__expand {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(31, 111, 178, 0.45);
+  border-radius: 6px;
+  background: var(--panel);
+  color: #14507f;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.parent-node__expand:hover {
+  border-color: var(--accent);
 }

@@ -28,6 +28,11 @@ export interface ParentGroupShape {
   pad: number;
   /** Caja que contiene la forma ya engrosada (para dimensionar el SVG). */
   bounds: { x: number; y: number; width: number; height: number };
+  /**
+   * Centro geométrico de la figura (centroide del polígono de la envolvente).
+   * Es donde se dibuja el nodo que reemplaza al grupo cuando está plegado.
+   */
+  centroid: Point;
   substateCount: number;
   /** Estados que NO son subestados pero caen dentro de la forma. */
   intruders: string[];
@@ -86,10 +91,75 @@ export function computeParentGroups(doc: StateMachineDocument): ParentGroupShape
       })
       .map((s) => s.id);
 
-    shapes.push({ parentId: parent.id, label: parent.label, hull, pad: GROUP_PAD, bounds, substateCount: substates.length, intruders });
+    shapes.push({
+      parentId: parent.id,
+      label: parent.label,
+      hull,
+      pad: GROUP_PAD,
+      bounds,
+      centroid: polygonCentroid(hull),
+      substateCount: substates.length,
+      intruders,
+    });
   }
 
   return shapes;
+}
+
+/**
+ * Centroide de un polígono simple por la fórmula del cordón (shoelace): lineal
+ * en la cantidad de vértices y exacto, sin integrar nada. Es el centro de masa
+ * de la figura tomada como lámina uniforme, que para una envolvente convexa es
+ * el punto que uno señalaría como "el medio".
+ *
+ * Con menos de tres vértices, o si son colineales, cae al promedio de puntos.
+ */
+export function polygonCentroid(points: readonly Point[]): Point {
+  const n = points.length;
+  if (n === 0) return { x: 0, y: 0 };
+  const promedio = () => ({
+    x: points.reduce((acc, p) => acc + p.x, 0) / n,
+    y: points.reduce((acc, p) => acc + p.y, 0) / n,
+  });
+  if (n < 3) return promedio();
+
+  let area2 = 0;
+  let cx = 0;
+  let cy = 0;
+  for (let i = 0; i < n; i += 1) {
+    const a = points[i] as Point;
+    const b = points[(i + 1) % n] as Point;
+    const cruz = a.x * b.y - b.x * a.y;
+    area2 += cruz;
+    cx += (a.x + b.x) * cruz;
+    cy += (a.y + b.y) * cruz;
+  }
+  if (Math.abs(area2) < 1e-9) return promedio();
+  return { x: cx / (3 * area2), y: cy / (3 * area2) };
+}
+
+/**
+ * Posiciones nuevas de los subestados cuando el nodo plegado del padre se
+ * arrastra hasta `newCenter`: todos se desplazan el mismo delta que separa el
+ * centroide actual del destino. Trasladar todos los puntos traslada el
+ * centroide exactamente igual, así que tras aplicar el movimiento el nodo
+ * plegado queda justo donde se soltó, sin acumular error.
+ */
+export function substatePositionsForGroupMove(
+  doc: StateMachineDocument,
+  parentId: string,
+  newCenter: Point,
+): Record<string, Point> {
+  const shape = computeParentGroups(doc).find((g) => g.parentId === parentId);
+  if (!shape) return {};
+  const delta = { x: newCenter.x - shape.centroid.x, y: newCenter.y - shape.centroid.y };
+  const result: Record<string, Point> = {};
+  for (const state of doc.machine.states) {
+    if (state.parentId !== parentId) continue;
+    const current = doc.layout.states[state.id];
+    if (current) result[state.id] = { x: current.x + delta.x, y: current.y + delta.y };
+  }
+  return result;
 }
 
 /** Path SVG de la envolvente, en coordenadas relativas a `bounds`. */

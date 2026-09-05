@@ -90,8 +90,8 @@ Si el texto tiene que verse en el gráfico, va en `label` o en `subtitle`.
 ### Jerarquía: subestados y estados padre
 
 Todo lo que está en `machine.states` es un **subestado**: es lo que se dibuja en
-el lienzo. Los **estados padre** viven aparte, en `machine.parents`, agrupan
-subestados y **no se dibujan**:
+el lienzo. Los **estados padre** viven aparte, en `machine.parents` y agrupan
+subestados:
 
 ```json
 "machine": {
@@ -115,6 +115,13 @@ subestados y **no se dibujan**:
 
 Eliminar un padre **no borra sus subestados**: quedan sueltos. Un padre sin
 subestados se acepta, pero se avisa.
+
+Cómo se ve un padre es asunto del editor, no del documento: dibuja una
+envolvente alrededor de sus subestados a partir de las posiciones de estos, y
+puede **plegarlo** en un único nodo (las transiciones que cruzan el borde se
+dibujan hacia ese nodo). Nada de eso tiene representación en el JSON: no hay
+entrada de layout para el padre ni bandera de plegado, y las transiciones
+siguen referenciando subestados. No agregues campos para expresarlo.
 
 ### `layout` (presentación; opcional)
 

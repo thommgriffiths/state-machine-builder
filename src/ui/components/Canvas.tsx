@@ -19,14 +19,22 @@ import {
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Position } from '../../domain';
-import { NODE_BOX, documentToFlow, nodePositionToCenter, type StateFlowNode, type TransitionFlowEdge } from '../adapter';
+import {
+  NODE_BOX,
+  documentToFlow,
+  nodePositionToCenter,
+  substatePositionsForGroupMove,
+  type FlowNode,
+  type TransitionFlowEdge,
+} from '../adapter';
 import { importFromText } from '../store/documentActions';
 import { useEditorStore } from '../store/editorStore';
+import { CollapsedParentNode } from './CollapsedParentNode';
 import { ParentGroups } from './ParentGroups';
 import { StateNode } from './StateNode';
 import { TransitionEdge } from './TransitionEdge';
 
-const nodeTypes: NodeTypes = { state: StateNode };
+const nodeTypes: NodeTypes = { state: StateNode, parent: CollapsedParentNode };
 const edgeTypes: EdgeTypes = { transition: TransitionEdge };
 
 /**
@@ -59,8 +67,9 @@ export function Canvas() {
   const deleteElements = useEditorStore((s) => s.deleteElements);
   const updateViewport = useEditorStore((s) => s.updateViewport);
   const notify = useEditorStore((s) => s.notify);
+  const collapsedParentIds = useEditorStore((s) => s.collapsedParentIds);
 
-  const { screenToFlowPosition, fitView, setViewport } = useReactFlow<StateFlowNode, TransitionFlowEdge>();
+  const { screenToFlowPosition, fitView, setViewport } = useReactFlow<FlowNode, TransitionFlowEdge>();
   const storeApi = useStoreApi();
   const wrapperRef = useRef<HTMLDivElement>(null);
   /** Resalte mientras se arrastra un archivo por encima del lienzo. */
@@ -71,8 +80,9 @@ export function Canvas() {
       documentToFlow(document, {
         stateIds: new Set(selection.stateIds),
         transitionIds: new Set(selection.transitionIds),
+        collapsedParentIds: new Set(collapsedParentIds),
       }),
-    [document, selection],
+    [document, selection, collapsedParentIds],
   );
 
   // Al cargar un documento: restaurar su cámara o ajustar la vista.
@@ -86,13 +96,20 @@ export function Canvas() {
   }, [loadCounter, fitView, setViewport]);
 
   const onNodesChange = useCallback(
-    (changes: NodeChange<StateFlowNode>[]) => {
+    (changes: NodeChange<FlowNode>[]) => {
       const positions: Record<string, Position> = {};
       let selectionChanged = false;
-      const stateIds = new Set(useEditorStore.getState().selection.stateIds);
+      const store = useEditorStore.getState();
+      const collapsed = new Set(store.collapsedParentIds);
+      const stateIds = new Set(store.selection.stateIds);
       for (const change of changes) {
         if (change.type === 'position' && change.position) {
-          positions[change.id] = nodePositionToCenter(change.position);
+          if (collapsed.has(change.id)) {
+            // Arrastrar un padre plegado mueve a todos sus subestados el mismo delta.
+            Object.assign(positions, substatePositionsForGroupMove(store.document, change.id, nodePositionToCenter(change.position)));
+          } else {
+            positions[change.id] = nodePositionToCenter(change.position);
+          }
         } else if (change.type === 'select') {
           selectionChanged = true;
           if (change.selected) stateIds.add(change.id);
@@ -144,10 +161,11 @@ export function Canvas() {
     [createTransition],
   );
 
-  const onBeforeDelete = useCallback<OnBeforeDelete<StateFlowNode, TransitionFlowEdge>>(
+  const onBeforeDelete = useCallback<OnBeforeDelete<FlowNode, TransitionFlowEdge>>(
     async ({ nodes: toDeleteNodes, edges: toDeleteEdges }) => {
       deleteElements(
-        toDeleteNodes.map((n) => n.id),
+        // Un padre plegado no es un elemento del modelo: no se borra desde el lienzo.
+        toDeleteNodes.filter((n) => n.type === 'state').map((n) => n.id),
         toDeleteEdges.map((e) => e.id),
       );
       // El dominio ya aplicó (o rechazó) la eliminación: React Flow no debe hacer nada más.
@@ -240,7 +258,7 @@ export function Canvas() {
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <ReactFlow<StateFlowNode, TransitionFlowEdge>
+      <ReactFlow<FlowNode, TransitionFlowEdge>
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}

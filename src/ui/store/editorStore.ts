@@ -82,6 +82,11 @@ export interface EditorStore {
    * abrirlo deselecciona, y seleccionar un elemento lo cierra.
    */
   jsonPanelOpen: boolean;
+  /**
+   * Padres plegados en el lienzo. Es estado de la vista, no del documento: no
+   * se persiste, no entra al historial y se limpia al cargar otra máquina.
+   */
+  collapsedParentIds: string[];
   past: StateMachineDocument[];
   future: StateMachineDocument[];
   lastCoalesceKey: string | null;
@@ -105,6 +110,8 @@ export interface EditorStore {
   openJsonPanel: () => void;
   closeJsonPanel: () => void;
   toggleJsonPanel: () => void;
+  /** Pliega o despliega un estado padre en el lienzo. */
+  toggleParentCollapsed: (parentId: string) => void;
 
   // --- avisos -------------------------------------------------------------
   notify: (kind: NoticeKind, message: string) => void;
@@ -147,6 +154,12 @@ function sanitizeSelection(doc: StateMachineDocument, selection: Selection): Sel
   return { stateIds: states, transitionIds: transitions };
 }
 
+function sanitizeCollapsed(doc: StateMachineDocument, collapsed: string[]): string[] {
+  const existing = new Set(doc.machine.parents.map((p) => p.id));
+  const kept = collapsed.filter((id) => existing.has(id));
+  return kept.length === collapsed.length ? collapsed : kept;
+}
+
 function withViewportOf(target: StateMachineDocument, source: StateMachineDocument): StateMachineDocument {
   if (source.layout.viewport === target.layout.viewport) return target;
   return setViewport(target, source.layout.viewport);
@@ -163,6 +176,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   loadCounter: 0,
   selection: EMPTY_SELECTION,
   jsonPanelOpen: false,
+  collapsedParentIds: [],
   past: [],
   future: [],
   lastCoalesceKey: null,
@@ -189,6 +203,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({
       document: next,
       selection: sanitizeSelection(next, state.selection),
+      collapsedParentIds: sanitizeCollapsed(next, state.collapsedParentIds),
       past: pushHistory ? [...state.past.slice(-(HISTORY_LIMIT - 1)), state.document] : state.past,
       future: pushHistory ? [] : state.future,
       lastCoalesceKey: recordHistory ? (options.coalesceKey ?? null) : state.lastCoalesceKey,
@@ -203,6 +218,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       baseline: options.baseline ?? state.baseline,
       loadCounter: options.keepHistory ? state.loadCounter : state.loadCounter + 1,
       selection: EMPTY_SELECTION,
+      collapsedParentIds: options.keepHistory ? sanitizeCollapsed(doc, state.collapsedParentIds) : [],
       past: options.keepHistory ? [...state.past.slice(-(HISTORY_LIMIT - 1)), state.document] : [],
       future: [],
       lastCoalesceKey: null,
@@ -267,6 +283,28 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   toggleJsonPanel: () => {
     if (get().jsonPanelOpen) get().closeJsonPanel();
     else get().openJsonPanel();
+  },
+
+  toggleParentCollapsed: (parentId) => {
+    const state = get();
+    if (!state.document.machine.parents.some((p) => p.id === parentId)) return;
+    const collapsed = new Set(state.collapsedParentIds);
+    if (collapsed.has(parentId)) {
+      collapsed.delete(parentId);
+      set({ collapsedParentIds: [...collapsed] });
+      return;
+    }
+    collapsed.add(parentId);
+    // Lo que queda oculto no puede seguir seleccionado.
+    const ocultos = new Set(state.document.machine.states.filter((s) => s.parentId === parentId).map((s) => s.id));
+    const transitionIds = state.selection.transitionIds.filter((id) => {
+      const t = state.document.machine.transitions.find((x) => x.id === id);
+      return !(t && ocultos.has(t.from) && ocultos.has(t.to));
+    });
+    set({
+      collapsedParentIds: [...collapsed],
+      selection: { stateIds: state.selection.stateIds.filter((id) => !ocultos.has(id)), transitionIds },
+    });
   },
 
   notify: (kind, message) => {
