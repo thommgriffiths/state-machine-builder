@@ -30,7 +30,7 @@ describe('serializeDocument / parseDocumentJson', () => {
 });
 
 describe('ejemplos incluidos', () => {
-  for (const file of ['expediente.json', 'simple.json', 'pedido-sin-layout.json']) {
+  for (const file of ['revista-articulo.json', 'simple.json', 'pedido-sin-layout.json']) {
     it(file + ' es un documento válido', () => {
       const text = readFileSync(resolve(process.cwd(), 'examples', file), 'utf8');
       const result = parseDocumentJson(text);

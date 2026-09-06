@@ -1,0 +1,251 @@
+{
+  "version": 2,
+  "machine": {
+    "id": "revista-articulo",
+    "name": "Publicación de un artículo en una revista",
+    "initialStateId": "recibido",
+    "states": [
+      {
+        "id": "recibido",
+        "label": "Recibido",
+        "type": "normal",
+        "subtitle": "Manuscrito enviado",
+        "description": "Los autores cargan el manuscrito, los metadatos y la carta de presentación. Se registra la fecha de recepción, que es la que figura en la publicación."
+      },
+      {
+        "id": "control-formal",
+        "label": "Control formal",
+        "type": "normal",
+        "subtitle": "Plantilla y anonimato",
+        "description": "La secretaría verifica que el manuscrito use la plantilla, no identifique a los autores en el cuerpo y declare conflictos de interés. Se devuelve tantas veces como haga falta."
+      },
+      {
+        "id": "asignacion",
+        "label": "Asignación",
+        "type": "normal",
+        "subtitle": "Editor de sección",
+        "description": "El editor jefe asigna un editor de sección según el área temática. Si el área no existe, lo toma el editor jefe."
+      },
+      {
+        "id": "filtro-editorial",
+        "label": "Filtro editorial",
+        "type": "normal",
+        "subtitle": "Alcance y originalidad",
+        "description": "El editor de sección lee el manuscrito y decide si entra en el alcance de la revista y si aporta algo nuevo. Se corre un control de similitud."
+      },
+      {
+        "id": "busqueda-revisores",
+        "label": "Revisores",
+        "type": "normal",
+        "subtitle": "Invitación a revisores",
+        "description": "Se invita a revisores externos. Hacen falta al menos dos que acepten; si nadie responde en 10 días se invita a otros.",
+        "parentId": "parent-evaluacion"
+      },
+      {
+        "id": "revision-pares",
+        "label": "Revisión",
+        "type": "normal",
+        "subtitle": "Evaluación por pares",
+        "description": "Los revisores tienen 30 días para entregar su informe con una recomendación: aceptar, cambios menores, cambios mayores o rechazar.",
+        "parentId": "parent-evaluacion"
+      },
+      {
+        "id": "informes",
+        "label": "Informes",
+        "type": "normal",
+        "subtitle": "Consolidación",
+        "description": "El editor de sección consolida los informes y, si son contradictorios, puede pedir un tercer informe.",
+        "parentId": "parent-evaluacion"
+      },
+      {
+        "id": "decision",
+        "label": "Decisión",
+        "type": "normal",
+        "subtitle": "Del editor de sección",
+        "description": "Decisión editorial fundada en los informes. Se comunica a los autores con los informes anonimizados.",
+        "parentId": "parent-evaluacion"
+      },
+      {
+        "id": "cambios-menores",
+        "label": "Cambios menores",
+        "type": "normal",
+        "subtitle": "Autores corrigen",
+        "description": "Correcciones puntuales que el editor puede verificar sin volver a los revisores. Plazo: 30 días."
+      },
+      {
+        "id": "cambios-mayores",
+        "label": "Cambios mayores",
+        "type": "normal",
+        "subtitle": "Nueva ronda",
+        "description": "Cambios de fondo. La versión nueva vuelve a los mismos revisores. Plazo: 90 días."
+      },
+      {
+        "id": "aceptado",
+        "label": "Aceptado",
+        "type": "normal",
+        "subtitle": "Pasa a producción",
+        "description": "Se firma la cesión de derechos y se cobra la tasa de publicación si corresponde."
+      },
+      {
+        "id": "edicion",
+        "label": "Edición",
+        "type": "normal",
+        "subtitle": "Corrección de estilo",
+        "description": "Corrección de estilo y normalización de referencias.",
+        "parentId": "parent-produccion"
+      },
+      {
+        "id": "maquetacion",
+        "label": "Maquetación",
+        "type": "normal",
+        "subtitle": "Diagramación",
+        "parentId": "parent-produccion"
+      },
+      {
+        "id": "pruebas",
+        "label": "Pruebas",
+        "type": "normal",
+        "subtitle": "Galeras a los autores",
+        "description": "Los autores revisan las galeras. Solo se admiten correcciones de errores; no se aceptan cambios de contenido en esta etapa.",
+        "parentId": "parent-produccion"
+      },
+      {
+        "id": "publicado",
+        "label": "Publicado",
+        "type": "final",
+        "subtitle": "Con DOI asignado"
+      },
+      {
+        "id": "rechazado",
+        "label": "Rechazado",
+        "type": "final",
+        "description": "Se comunica el rechazo con los motivos. Los autores pueden apelar por escrito dentro de los 15 días; la apelación abre un envío nuevo."
+      },
+      {
+        "id": "retirado",
+        "label": "Retirado",
+        "type": "final",
+        "subtitle": "Por vencimiento de plazo",
+        "description": "Se cierra el envío sin decisión. Los autores pueden volver a enviarlo como manuscrito nuevo."
+      }
+    ],
+    "parents": [
+      {
+        "id": "parent-evaluacion",
+        "label": "Evaluación",
+        "description": "Desde que se buscan revisores hasta la decisión editorial. Es la etapa que más demora: entre dos y cuatro meses."
+      },
+      {
+        "id": "parent-produccion",
+        "label": "Producción",
+        "description": "Preparación del artículo aceptado para su publicación."
+      }
+    ],
+    "transitions": [
+      { "id": "t-recibido-control", "from": "recibido", "to": "control-formal", "event": "ENVIAR" },
+      {
+        "id": "t-control-loop",
+        "from": "control-formal",
+        "to": "control-formal",
+        "label": "Corregir formato",
+        "event": "DEVOLVER",
+        "description": "Se devuelve a los autores con la lista de faltantes. No hay límite de vueltas."
+      },
+      { "id": "t-control-asignacion", "from": "control-formal", "to": "asignacion", "label": "Formato correcto", "condition": "cumple plantilla" },
+      { "id": "t-asignacion-filtro", "from": "asignacion", "to": "filtro-editorial", "event": "EDITOR_ASIGNADO" },
+      {
+        "id": "t-filtro-revisores",
+        "from": "filtro-editorial",
+        "to": "busqueda-revisores",
+        "label": "Pasa a revisión",
+        "condition": "en alcance y similitud < 20%"
+      },
+      {
+        "id": "t-filtro-rechazo",
+        "from": "filtro-editorial",
+        "to": "rechazado",
+        "label": "Rechazo editorial",
+        "description": "Sin revisión externa. Motivos típicos: fuera de alcance, similitud alta, calidad insuficiente."
+      },
+      { "id": "t-revisores-loop", "from": "busqueda-revisores", "to": "busqueda-revisores", "label": "Invitar más", "condition": "sin respuesta en 10 días" },
+      { "id": "t-revisores-revision", "from": "busqueda-revisores", "to": "revision-pares", "condition": "≥ 2 revisores aceptan" },
+      {
+        "id": "t-revision-revisores",
+        "from": "revision-pares",
+        "to": "busqueda-revisores",
+        "label": "Revisor se baja",
+        "description": "Si un revisor renuncia o no entrega, se vuelve a buscar reemplazo."
+      },
+      { "id": "t-revision-informes", "from": "revision-pares", "to": "informes", "condition": "todos los informes entregados" },
+      { "id": "t-informes-decision", "from": "informes", "to": "decision", "event": "CONSOLIDADO" },
+      { "id": "t-decision-aceptar", "from": "decision", "to": "aceptado", "label": "Aceptar", "action": "notificarAutores" },
+      { "id": "t-decision-menores", "from": "decision", "to": "cambios-menores", "label": "Cambios menores", "action": "notificarAutores" },
+      { "id": "t-decision-mayores", "from": "decision", "to": "cambios-mayores", "label": "Cambios mayores", "action": "notificarAutores" },
+      { "id": "t-decision-rechazo", "from": "decision", "to": "rechazado", "label": "Rechazar", "action": "notificarAutores" },
+      {
+        "id": "t-menores-decision",
+        "from": "cambios-menores",
+        "to": "decision",
+        "label": "Versión corregida",
+        "condition": "dentro de 30 días",
+        "description": "El editor verifica las correcciones sin volver a los revisores."
+      },
+      { "id": "t-menores-retirado", "from": "cambios-menores", "to": "retirado", "label": "Vence el plazo" },
+      {
+        "id": "t-mayores-revision",
+        "from": "cambios-mayores",
+        "to": "revision-pares",
+        "label": "Nueva versión",
+        "condition": "dentro de 90 días",
+        "description": "Vuelve a los mismos revisores, con una carta de respuesta punto por punto."
+      },
+      { "id": "t-mayores-retirado", "from": "cambios-mayores", "to": "retirado", "label": "Vence el plazo" },
+      { "id": "t-aceptado-edicion", "from": "aceptado", "to": "edicion", "condition": "cesión de derechos firmada", "action": "asignarCorrector" },
+      { "id": "t-edicion-maquetacion", "from": "edicion", "to": "maquetacion", "event": "TEXTO_FINAL" },
+      { "id": "t-maquetacion-pruebas", "from": "maquetacion", "to": "pruebas", "event": "GALERAS_LISTAS" },
+      { "id": "t-pruebas-maquetacion", "from": "pruebas", "to": "maquetacion", "label": "Correcciones" },
+      { "id": "t-pruebas-publicado", "from": "pruebas", "to": "publicado", "condition": "autores aprueban", "action": "asignarDOI" }
+    ]
+  },
+  "layout": {
+    "states": {
+      "recibido": { "x": 100, "y": 140 },
+      "control-formal": { "x": 320, "y": 140 },
+      "asignacion": { "x": 540, "y": 140 },
+      "filtro-editorial": { "x": 760, "y": 140 },
+      "rechazado": { "x": 1380, "y": 140 },
+      "busqueda-revisores": { "x": 540, "y": 380 },
+      "revision-pares": { "x": 760, "y": 380 },
+      "informes": { "x": 980, "y": 380 },
+      "decision": { "x": 1200, "y": 380 },
+      "cambios-mayores": { "x": 640, "y": 660 },
+      "cambios-menores": { "x": 1000, "y": 620 },
+      "aceptado": { "x": 1380, "y": 620 },
+      "retirado": { "x": 760, "y": 880 },
+      "edicion": { "x": 1000, "y": 880 },
+      "maquetacion": { "x": 1200, "y": 880 },
+      "pruebas": { "x": 1400, "y": 880 },
+      "publicado": { "x": 1620, "y": 880 }
+    }
+  },
+  "styles": {
+    "defaults": { "stateColor": "#000000", "transitionColor": "#000000" },
+    "states": {
+      "aceptado": { "color": "#2E7D32" },
+      "publicado": { "color": "#2E7D32" },
+      "rechazado": { "color": "#C0392B" },
+      "retirado": { "color": "#7F8C8D" }
+    },
+    "transitions": {
+      "t-control-loop": { "lineStyle": "dashed" },
+      "t-revisores-loop": { "lineStyle": "dashed", "curvature": -0.5 },
+      "t-filtro-rechazo": { "color": "#C0392B" },
+      "t-decision-rechazo": { "color": "#C0392B" },
+      "t-decision-aceptar": { "color": "#2E7D32" },
+      "t-pruebas-publicado": { "color": "#2E7D32" },
+      "t-menores-retirado": { "color": "#7F8C8D", "lineStyle": "dashed" },
+      "t-mayores-retirado": { "color": "#7F8C8D", "lineStyle": "dashed" },
+      "t-revision-revisores": { "lineStyle": "dashed" }
+    }
+  }
+}

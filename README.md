@@ -137,7 +137,7 @@ src/ui/store    estado del editor (Zustand), historial, persistencia local
 src/ui/components  lienzo, nodo, arista, inspector, panel JSON, barra
 tests/          invariantes, operaciones, validación, posicionamiento, geometría, serialización
 docs/           guías de uso y para LLMs (se incrustan en la app), arquitectura y JSON Schema
-examples/       documentos de ejemplo (uno inspirado en la imagen de referencia, uno sin layout)
+examples/       documentos de ejemplo; solo los ficticios se embeben en la app (ver src/examples/index.ts)
 scripts/        generación del schema y validador de línea de comandos
 ```
 
