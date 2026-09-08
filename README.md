@@ -97,8 +97,10 @@ navegador de cada persona, y se comparten exportando el JSON.
   de eso se guarda en el JSON.
 - `layout.states[id]` es el **centro** del nodo. Es opcional: lo que falte se
   posiciona automáticamente (solo eso; nada existente se mueve).
-- `styles` guarda color por ID, `curvature` en `[-1, 1]` y `lineStyle`. Los
-  colores no tienen semántica.
+- `styles` guarda color por ID (de estados, transiciones y estados padre),
+  `curvature` en `[-1, 1]` y `lineStyle`. Los colores no tienen semántica. El
+  color de un padre es uno solo: el fondo, el borde y la etiqueta de su
+  envolvente se derivan de él.
 - Todas las relaciones se expresan por ID. Mover un estado cambia únicamente
   `layout.states[id]`; las flechas se recalculan porque conocen `from`/`to`.
 

@@ -852,30 +852,23 @@ textarea.input {
   pointer-events: none;
 }
 
+/* Los tres colores (--group-fill, --group-border, --group-label) los calcula
+   ParentGroups a partir del color del padre. Acá solo se usan. */
+
 /* El contorno sale de pintar la envolvente dos veces: el trazo grueso de abajo
    asoma como borde alrededor del relleno. */
 .parent-group__border {
-  fill: #a9c3da;
-  stroke: #a9c3da;
+  fill: var(--group-border);
+  stroke: var(--group-border);
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
 .parent-group__fill {
-  fill: #e4ecf4;
-  stroke: #e4ecf4;
+  fill: var(--group-fill);
+  stroke: var(--group-fill);
   stroke-linejoin: round;
   stroke-linecap: round;
-}
-
-.parent-group--conflict .parent-group__border {
-  fill: #e0b070;
-  stroke: #e0b070;
-}
-
-.parent-group--conflict .parent-group__fill {
-  fill: #faf1e2;
-  stroke: #faf1e2;
 }
 
 /* Etiqueta y botón de plegar, en la esquina superior izquierda de la forma. */
@@ -891,23 +884,19 @@ textarea.input {
 .parent-group__label {
   pointer-events: all;
   padding: 2px 9px;
-  border: 1px solid rgba(31, 111, 178, 0.45);
+  border: 1px solid var(--group-border);
   border-radius: 6px;
   background: var(--panel);
-  color: #14507f;
+  color: var(--group-label);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
 }
 
-.parent-group__label:hover {
-  border-color: var(--accent);
-}
-
-.parent-group--conflict .parent-group__label {
-  border-color: #c8912f;
-  color: #8a5b09;
+.parent-group__label:hover,
+.parent-group__collapse:hover {
+  border-color: var(--group-label);
 }
 
 .parent-group__warn {
@@ -924,17 +913,13 @@ textarea.input {
   pointer-events: all;
   width: 22px;
   padding: 0;
-  border: 1px solid rgba(31, 111, 178, 0.45);
+  border: 1px solid var(--group-border);
   border-radius: 6px;
   background: var(--panel);
-  color: #14507f;
+  color: var(--group-label);
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
-}
-
-.parent-group__collapse:hover {
-  border-color: var(--accent);
 }
 
 /* ------------------------------------------------------ nodo padre plegado */
@@ -952,6 +937,7 @@ textarea.input {
   width: 92px;
   height: 92px;
   --node-color: #000;
+  --node-fill: #fff;
 }
 
 .react-flow__handle.parent-node__handle {
@@ -975,7 +961,7 @@ textarea.input {
   height: 72px;
   border-radius: 50%;
   border: 2.5px dashed var(--node-color);
-  background: #fff;
+  background: var(--node-fill);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1016,7 +1002,7 @@ textarea.input {
   height: 20px;
   padding: 0 5px;
   border-radius: 10px;
-  background: var(--accent);
+  background: var(--node-color);
   color: #fff;
   font-size: 11px;
   font-weight: 600;
@@ -1033,10 +1019,10 @@ textarea.input {
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1px solid rgba(31, 111, 178, 0.45);
+  border: 1px solid var(--node-color);
   border-radius: 6px;
   background: var(--panel);
-  color: #14507f;
+  color: var(--node-color);
   font-size: 13px;
   line-height: 1;
   cursor: pointer;

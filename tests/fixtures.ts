@@ -32,9 +32,10 @@ export function fixtureDocument(): StateMachineDocument {
       },
     },
     styles: {
-      defaults: { stateColor: '#000000', transitionColor: '#000000' },
+      defaults: { stateColor: '#000000', transitionColor: '#000000', parentColor: '#1F6FB2' },
       states: { C: { color: '#2E7D32' } },
       transitions: { 't-bc': { color: '#D32F2F', curvature: 0.25 } },
+      parents: {},
     },
   };
 }

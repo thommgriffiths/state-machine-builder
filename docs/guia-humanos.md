@@ -18,7 +18,7 @@ Una máquina se guarda como un archivo JSON con tres partes separadas:
 | --- | --- | --- |
 | `machine` | el negocio: estados, transiciones, eventos, condiciones, acciones, cuál es el inicial | personas y LLMs |
 | `layout` | dónde está cada estado en el lienzo | el lienzo, al arrastrar |
-| `styles` | colores, curvatura y estilo de línea | la pestaña Estilo del inspector |
+| `styles` | colores (de estados, flechas y grupos), curvatura y estilo de línea | la pestaña Estilo del inspector |
 
 La separación importa: **un LLM puede cambiar la lógica sin desordenar el
 dibujo**, y vos podés acomodar el dibujo sin tocar la lógica. Los colores no
@@ -39,10 +39,10 @@ significan nada por sí mismos; lo que significa algo está en `machine`.
   bucle). Además de la etiqueta y la descripción puede llevar **evento** (qué
   la dispara), **condición** (cuándo se permite) y **acción** (qué hace).
 - **Estado padre**: agrupa estados que forman una etapa (por ejemplo,
-  "Antecedentes"). Se dibuja como una envolvente alrededor de sus estados y se
-  puede **plegar** en un solo nodo para ver el circuito en grande. Cada estado
-  puede pertenecer a un padre o quedar suelto. Por ahora los padres no se
-  anidan.
+  "Antecedentes"). Se dibuja como una envolvente alrededor de sus estados, con
+  el color que le elijas, y se puede **plegar** en un solo nodo para ver el
+  circuito en grande. Cada estado puede pertenecer a un padre o quedar suelto.
+  Por ahora los padres no se anidan.
 - **ID**: el identificador interno de cada estado, transición o padre. Se
   genera solo y es único. No hace falta tocarlo; el inspector lo muestra por si
   necesitás nombrarlo, por ejemplo al hablar con un LLM.
@@ -68,6 +68,7 @@ significan nada por sí mismos; lo que significa algo está en `machine`.
 | Editar un estado o una transición | Clic para seleccionar. La barra lateral separa sus propiedades en dos pestañas: **Negocio** (etiqueta, subtítulo, descripción, tipo, inicial, origen y destino, evento, condición, acción) y **Estilo** (color, curvatura, estilo de línea, posición) |
 | Marcar el inicial | Botón "Marcar como inicial" en la pestaña Negocio del estado, o el selector "Estado inicial" del inspector de la máquina |
 | Estado padre | En la pestaña Negocio del estado, "Pertenece a" elige un padre existente o crea uno en el momento. El inspector de la máquina lista los padres con sus subestados. Eliminar un padre no borra sus subestados: quedan sueltos |
+| Color de un grupo | En el inspector de la máquina (sin nada seleccionado), sección "Estados padre": cada uno tiene su paleta. Se elige un solo color y la herramienta lo aclara para el fondo y lo oscurece para el borde y el nombre, así el grupo se tiñe sin tapar los estados de adentro. "Predeterminado" vuelve al azul |
 | Plegar un padre | Botón ⊟ junto al nombre de la envolvente, o "Plegar" en la lista de padres. Queda un solo nodo en el centro del grupo; las flechas que entran o salen del grupo se redirigen a él y las internas se ocultan. Arrastrarlo mueve a todos sus subestados. ⊞ o "Desplegar" lo abre de nuevo. Es solo una vista: no cambia el archivo y se pierde al recargar |
 | Envolvente naranja | El padre encierra visualmente un estado que no le pertenece. Mové ese estado, o asignalo al padre |
 | Eliminar | Supr / Retroceso con algo seleccionado, o botón "Eliminar" en el inspector. Eliminar un estado elimina sus transiciones. El inicial no se puede eliminar hasta marcar otro |

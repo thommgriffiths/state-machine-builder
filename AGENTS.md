@@ -34,8 +34,9 @@ npm run validate -- ruta/al/documento.json
 3. `reconcileDocument` asigna posición a los estados sin `layout` (solo a
    ellos) y elimina metadata huérfana, informando ambas cosas.
 4. El adaptador (`src/ui/adapter`) convierte el documento a nodos y aristas de
-   la librería gráfica; calcula anclajes, curvas, puntas de flecha,
-   envolventes de los padres y el plegado. Nada de eso se guarda.
+   la librería gráfica; calcula anclajes, curvas, puntas de flecha, envolventes
+   de los padres, su paleta a partir del color del grupo, y el plegado. Nada de
+   eso se guarda: del padre solo se persiste su color, en `styles.parents`.
 
 Si en el futuro se cambia la librería gráfica, el formato no cambia.
 

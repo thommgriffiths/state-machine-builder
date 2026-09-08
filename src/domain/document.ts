@@ -13,6 +13,6 @@ export function createEmptyDocument(input: { id?: string; name?: string } = {}):
       parents: [],
     },
     layout: { states: { 'state-1': { x: 200, y: 200 } } },
-    styles: { defaults: { ...DEFAULT_STYLE_DEFAULTS }, states: {}, transitions: {} },
+    styles: { defaults: { ...DEFAULT_STYLE_DEFAULTS }, states: {}, transitions: {}, parents: {} },
   };
 }

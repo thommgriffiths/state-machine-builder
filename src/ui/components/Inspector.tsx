@@ -207,6 +207,7 @@ function ParentList() {
   const selectState = useEditorStore((s) => s.selectState);
   const collapsedIds = useEditorStore((s) => s.collapsedParentIds);
   const toggleCollapsed = useEditorStore((s) => s.toggleParentCollapsed);
+  const styleParent = useEditorStore((s) => s.styleParent);
   const { parents, states } = document.machine;
 
   if (parents.length === 0) {
@@ -253,6 +254,13 @@ function ParentList() {
                 </button>
               </span>
             </div>
+            <Field label="Color del grupo" hint="(tiñe la envolvente; solo presentación)">
+              <ColorInput
+                value={document.styles.parents[parent.id]?.color}
+                defaultValue={document.styles.defaults.parentColor}
+                onChange={(color) => styleParent(parent.id, { color }, 'parent.color:' + parent.id)}
+              />
+            </Field>
           </div>
         );
       })}

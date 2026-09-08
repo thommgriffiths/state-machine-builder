@@ -33,6 +33,7 @@ export interface CollapsedParentNodeData extends Record<string, unknown> {
   substateCount: number;
   /** El estado inicial está adentro: el marcador de entrada se dibuja sobre el nodo plegado. */
   containsInitial: boolean;
+  /** Color del grupo; el nodo deriva de él su borde y su fondo. */
   color: string;
 }
 
@@ -156,7 +157,7 @@ export function documentToFlow(doc: StateMachineDocument, selection: FlowSelecti
           label: shape.label,
           substateCount: shape.substateCount,
           containsInitial: machine.states.some((s) => s.parentId === shape.parentId && s.id === machine.initialStateId),
-          color: styles.defaults.stateColor,
+          color: styles.parents[shape.parentId]?.color ?? styles.defaults.parentColor,
         },
       });
     }

@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_STYLE_DEFAULTS,
   DomainError,
   addState,
   addTransition,
@@ -195,7 +196,7 @@ describe('Un estado nuevo sin layout recibe automáticamente una posición', () 
     expect(result.report.placedStates).toEqual(['s1', 's2']);
     expect(result.document.layout.states.s1).toBeDefined();
     expect(result.document.layout.states.s2).toBeDefined();
-    expect(result.document.styles.defaults).toEqual({ stateColor: '#000000', transitionColor: '#000000' });
+    expect(result.document.styles.defaults).toEqual(DEFAULT_STYLE_DEFAULTS);
     expect(result.document.machine.transitions[0]).toEqual({ id: 't1', from: 's1', to: 's2', event: 'NEXT' });
   });
 });

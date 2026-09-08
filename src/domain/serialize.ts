@@ -75,6 +75,7 @@ export function serializeDocument(doc: StateMachineDocument): string {
 export function canonicalize(doc: StateMachineDocument): StateMachineDocument {
   const stateOrder = doc.machine.states.map((s) => s.id);
   const transitionOrder = doc.machine.transitions.map((t) => t.id);
+  const parentOrder = doc.machine.parents.map((p) => p.id);
 
   const layout: StateMachineDocument['layout'] = { states: orderRecord(doc.layout.states, stateOrder) };
   if (doc.layout.viewport) layout.viewport = doc.layout.viewport;
@@ -112,6 +113,7 @@ export function canonicalize(doc: StateMachineDocument): StateMachineDocument {
       defaults: { ...doc.styles.defaults },
       states: orderRecord(doc.styles.states, stateOrder),
       transitions: orderRecord(doc.styles.transitions, transitionOrder),
+      parents: orderRecord(doc.styles.parents, parentOrder),
     },
   };
 }

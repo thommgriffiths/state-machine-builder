@@ -268,6 +268,12 @@
               "type": "string",
               "minLength": 1,
               "description": "Color CSS (preferentemente hexadecimal). Solo presentación."
+            },
+            "parentColor": {
+              "default": "#1F6FB2",
+              "type": "string",
+              "minLength": 1,
+              "description": "Color CSS (preferentemente hexadecimal). Solo presentación."
             }
           },
           "additionalProperties": false
@@ -320,6 +326,27 @@
                   "solid",
                   "dashed"
                 ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "parents": {
+          "default": {},
+          "description": "Color por estado padre, indexado por ID de padre",
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Identificador estable y único dentro del documento"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "color": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Color del grupo; el fondo y el borde de la envolvente se derivan de él"
               }
             },
             "additionalProperties": false

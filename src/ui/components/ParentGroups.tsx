@@ -1,6 +1,6 @@
 import { ViewportPortal } from '@xyflow/react';
 import { useMemo } from 'react';
-import { computeParentGroups, hullPath } from '../adapter';
+import { CONFLICT_COLOR, computeParentGroups, hullPath, parentPalette } from '../adapter';
 import { useEditorStore } from '../store/editorStore';
 
 /** Grosor del borde de la envolvente. */
@@ -18,6 +18,11 @@ const BORDE = 1.5;
  * pintarla dos veces: primero con un trazo grueso del color del borde y encima
  * con uno un poco más fino del color de relleno. Eso da el contorno redondeado
  * exacto de la forma engrosada sin tener que calcular el desplazamiento a mano.
+ *
+ * El color sale de `styles.parents[id].color` (uno solo por padre); el fondo,
+ * el borde y la etiqueta se derivan de él y se pasan al CSS como variables. Un
+ * grupo que encierra a un estado ajeno se pinta con el color de conflicto, que
+ * gana sobre el elegido: el aviso importa más que la decoración.
  */
 export function ParentGroups() {
   const document = useEditorStore((s) => s.document);
@@ -36,13 +41,20 @@ export function ParentGroups() {
       {groups.map((group) => {
         const path = hullPath(group);
         const conflicto = group.intruders.length > 0;
+        const elegido = document.styles.parents[group.parentId]?.color ?? document.styles.defaults.parentColor;
+        const palette = parentPalette(conflicto ? CONFLICT_COLOR : elegido);
         return (
           <div
             key={group.parentId}
             className={'parent-group' + (conflicto ? ' parent-group--conflict' : '')}
-            style={{
-              transform: 'translate(' + group.bounds.x + 'px, ' + group.bounds.y + 'px)',
-            }}
+            style={
+              {
+                transform: 'translate(' + group.bounds.x + 'px, ' + group.bounds.y + 'px)',
+                '--group-fill': palette.fill,
+                '--group-border': palette.border,
+                '--group-label': palette.label,
+              } as React.CSSProperties
+            }
           >
             <svg width={group.bounds.width} height={group.bounds.height} style={{ overflow: 'visible' }}>
               <g transform={'translate(' + group.pad + ', ' + group.pad + ')'}>

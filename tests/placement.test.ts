@@ -90,12 +90,14 @@ describe('reconcileDocument', () => {
     doc.layout.states.ZZ = { x: 1, y: 1 };
     doc.styles.states.YY = { color: '#fff' };
     doc.styles.transitions.XX = { curvature: 0.1 };
+    doc.styles.parents.WW = { color: '#fff' };
     const { document, report } = reconcileDocument(doc);
     expect(report).toEqual({
       placedStates: [],
       prunedLayoutStates: ['ZZ'],
       prunedStateStyles: ['YY'],
       prunedTransitionStyles: ['XX'],
+      prunedParentStyles: ['WW'],
     });
     expect(document.layout.states.ZZ).toBeUndefined();
     expect(document.layout.states.A).toEqual({ x: 100, y: 100 });

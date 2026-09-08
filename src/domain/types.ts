@@ -135,15 +135,32 @@ export interface TransitionStyle {
   lineStyle?: LineStyle;
 }
 
+/**
+ * Estilo de un estado padre: el color del grupo.
+ *
+ * Es UN color, no tres. De él se derivan el fondo de la envolvente, su borde y
+ * su etiqueta (ver `parentPalette` en el adaptador), así elegir "azul" tiñe al
+ * grupo de azul en vez de taparlo con un bloque azul sólido, y la misma paleta
+ * que sirve para un estado sirve para un grupo.
+ */
+export interface ParentStyle {
+  /** Color CSS (preferentemente hex). Sin semántica. */
+  color?: string;
+}
+
 export interface StyleDefaults {
   stateColor: string;
   transitionColor: string;
+  /** Color de los estados padre que no definen el suyo. */
+  parentColor: string;
 }
 
 export interface Styles {
   defaults: StyleDefaults;
   states: Record<string, StateStyle>;
   transitions: Record<string, TransitionStyle>;
+  /** Color por estado padre, indexado por ID de padre. */
+  parents: Record<string, ParentStyle>;
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +175,11 @@ export interface Styles {
  *       negocio (no se dibuja) que ahora también tienen las transiciones.
  *
  * Los documentos de la versión 1 se migran solos al abrirlos (ver migrate.ts).
+ *
+ * La versión sube cuando un documento existente deja de significar lo mismo y
+ * hay que transformarlo. Agregar una clave opcional con valor por defecto (como
+ * `styles.parents`) no lo hace: todo documento anterior sigue siendo válido y
+ * significando exactamente lo mismo, y no hay nada que migrar.
  */
 export const DOCUMENT_VERSION = 2 as const;
 
@@ -171,4 +193,6 @@ export interface StateMachineDocument {
 export const DEFAULT_STYLE_DEFAULTS: StyleDefaults = {
   stateColor: '#000000',
   transitionColor: '#000000',
+  // El azul de la interfaz: reproduce el aspecto que la envolvente tuvo siempre.
+  parentColor: '#1F6FB2',
 };

@@ -102,6 +102,17 @@ sus subestados (nodo más subtítulo), engrosada `GROUP_PAD`. Se dibuja por
 así no participa del arrastre, la selección por región ni el borrado. Si un
 estado ajeno queda dentro de la figura se detecta (`intruders`) y se marca.
 
+El color del grupo vive en `styles.parents[id].color` y es **uno solo**: el
+fondo, el borde y la etiqueta se derivan de él en `palette.ts` mezclándolo con
+blanco y oscureciéndolo. Guardar tres colores dejaría al usuario combinar un
+fondo oscuro con una etiqueta oscura, y a un agente inventando claves; con uno
+solo, elegir "azul" tiñe el grupo en vez de taparlo con un bloque azul sólido,
+y la paleta de colores de los estados sirve tal cual para los grupos. Las
+proporciones están calibradas para que el color por defecto reproduzca el
+aspecto que la envolvente tuvo siempre, y un test las fija. El aviso de
+conflicto (un ajeno encerrado) pinta el grupo con el color de conflicto por
+encima del elegido: importa más que la decoración.
+
 Plegar un padre es **estado de la vista** (`collapsedParentIds` en el store):
 no está en el documento, no entra al historial y se descarta al cargar otra
 máquina. Al plegar, el adaptador omite los subestados, agrega un nodo de tipo
@@ -164,6 +175,15 @@ carga.
 La lección para el futuro: subir la versión de un formato persistido y escribir
 su migración son un mismo cambio, no dos. Separarlos deja una ventana en la que
 lo que se guarda queda mal etiquetado.
+
+Y el reverso: **no todo cambio del formato sube la versión.** Agregar una clave
+opcional con valor por defecto (`styles.parents` fue el primer caso) deja a
+todo documento anterior válido y significando exactamente lo mismo, así que no
+hay nada que migrar y subir el número solo obligaría a reescribir archivos que
+están bien. La versión sube cuando un documento existente **deja de significar
+lo mismo** y hay que transformarlo. Lo que sí cambia con una clave nueva es la
+compatibilidad hacia adelante: una copia vieja de la aplicación rechaza el
+documento por clave desconocida, porque el schema es estricto a propósito.
 
 ### Reconciliación en lugar de relayout
 

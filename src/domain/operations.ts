@@ -11,6 +11,7 @@ import { placeNewStates } from './placement';
 import type {
   Machine,
   ParentState,
+  ParentStyle,
   Position,
   State,
   StateMachineDocument,
@@ -241,7 +242,11 @@ export function removeParent(doc: StateMachineDocument, parentId: string): State
     states: doc.machine.states.map((s) => (s.parentId === parentId ? omitParent(s) : s)),
     parents: doc.machine.parents.filter((p) => p.id !== parentId),
   };
-  return withMachine(doc, machine);
+  return {
+    ...withMachine(doc, machine),
+    // Su color se va con él: si no, quedaría como metadata huérfana.
+    styles: { ...doc.styles, parents: omitKey(doc.styles.parents, parentId) },
+  };
 }
 
 /** Renombra el id de un estado propagando el cambio a transiciones, inicial, layout y estilos. */
@@ -462,6 +467,18 @@ export function setTransitionStyle(
     ? { ...doc.styles.transitions, [transitionId]: merged }
     : omitKey(doc.styles.transitions, transitionId);
   return { ...doc, styles: { ...doc.styles, transitions } };
+}
+
+/** Mezcla `patch` en el estilo del estado padre. Un valor `undefined` elimina esa propiedad. */
+export function setParentStyle(
+  doc: StateMachineDocument,
+  parentId: string,
+  patch: Partial<ParentStyle>,
+): StateMachineDocument {
+  requireParent(doc, parentId);
+  const merged = mergeStyle(doc.styles.parents[parentId], patch);
+  const parents = merged ? { ...doc.styles.parents, [parentId]: merged } : omitKey(doc.styles.parents, parentId);
+  return { ...doc, styles: { ...doc.styles, parents } };
 }
 
 function mergeStyle<T extends object>(current: T | undefined, patch: Partial<T>): T | undefined {

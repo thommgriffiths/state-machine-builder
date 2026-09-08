@@ -229,7 +229,11 @@
     }
   },
   "styles": {
-    "defaults": { "stateColor": "#000000", "transitionColor": "#000000" },
+    "defaults": { "stateColor": "#000000", "transitionColor": "#000000", "parentColor": "#1F6FB2" },
+    "parents": {
+      "parent-evaluacion": { "color": "#7B3FA0" },
+      "parent-produccion": { "color": "#2E7D32" }
+    },
     "states": {
       "aceptado": { "color": "#2E7D32" },
       "publicado": { "color": "#2E7D32" },

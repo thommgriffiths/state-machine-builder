@@ -23,6 +23,7 @@ import {
   serializeDocument,
   setInitialState,
   setStateParent,
+  setParentStyle,
   setStateStyle,
   setTransitionStyle,
   setViewport,
@@ -33,6 +34,7 @@ import {
   type Position,
   type ReconcileReport,
   type ParentState,
+  type ParentStyle,
   type State,
   type StateMachineDocument,
   type StateStyle,
@@ -143,6 +145,8 @@ export interface EditorStore {
   updateViewport: (viewport: Viewport) => void;
   styleState: (id: string, patch: Partial<StateStyle>, coalesceKey?: string) => void;
   styleTransition: (id: string, patch: Partial<TransitionStyle>, coalesceKey?: string) => void;
+  /** Color del estado padre: tiñe su envolvente (y su nodo, si está plegado). */
+  styleParent: (id: string, patch: Partial<ParentStyle>, coalesceKey?: string) => void;
 }
 
 function sanitizeSelection(doc: StateMachineDocument, selection: Selection): Selection {
@@ -326,6 +330,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (report.prunedTransitionStyles.length > 0) {
       lines.push('Estilos de transición huérfanos eliminados: ' + report.prunedTransitionStyles.join(', ') + '.');
     }
+    if (report.prunedParentStyles.length > 0) {
+      lines.push('Estilos de estado padre huérfanos eliminados: ' + report.prunedParentStyles.join(', ') + '.');
+    }
     if (lines.length > 0) get().notify('info', lines.join(' '));
   },
 
@@ -423,6 +430,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   styleTransition: (id, patch, coalesceKey) => {
     get().commit((doc) => setTransitionStyle(doc, id, patch), { coalesceKey });
+  },
+
+  styleParent: (id, patch, coalesceKey) => {
+    get().commit((doc) => setParentStyle(doc, id, patch), { coalesceKey });
   },
 }));
 

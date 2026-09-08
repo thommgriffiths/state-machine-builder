@@ -18,6 +18,7 @@ export interface ReconcileReport {
   prunedLayoutStates: string[];
   prunedStateStyles: string[];
   prunedTransitionStyles: string[];
+  prunedParentStyles: string[];
 }
 
 export function isReportEmpty(report: ReconcileReport): boolean {
@@ -25,7 +26,8 @@ export function isReportEmpty(report: ReconcileReport): boolean {
     report.placedStates.length === 0 &&
     report.prunedLayoutStates.length === 0 &&
     report.prunedStateStyles.length === 0 &&
-    report.prunedTransitionStyles.length === 0
+    report.prunedTransitionStyles.length === 0 &&
+    report.prunedParentStyles.length === 0
   );
 }
 
@@ -35,12 +37,14 @@ export function reconcileDocument(
 ): { document: StateMachineDocument; report: ReconcileReport } {
   const stateIds = new Set(doc.machine.states.map((s) => s.id));
   const transitionIds = new Set(doc.machine.transitions.map((t) => t.id));
+  const parentIds = new Set(doc.machine.parents.map((p) => p.id));
 
   const report: ReconcileReport = {
     placedStates: [],
     prunedLayoutStates: [],
     prunedStateStyles: [],
     prunedTransitionStyles: [],
+    prunedParentStyles: [],
   };
 
   const layoutStates: StateMachineDocument['layout']['states'] = {};
@@ -61,10 +65,16 @@ export function reconcileDocument(
     else report.prunedTransitionStyles.push(id);
   }
 
+  const styleParents: StateMachineDocument['styles']['parents'] = {};
+  for (const [id, style] of Object.entries(doc.styles.parents)) {
+    if (parentIds.has(id)) styleParents[id] = style;
+    else report.prunedParentStyles.push(id);
+  }
+
   let next: StateMachineDocument = {
     ...doc,
     layout: { ...doc.layout, states: layoutStates },
-    styles: { ...doc.styles, states: styleStates, transitions: styleTransitions },
+    styles: { ...doc.styles, states: styleStates, transitions: styleTransitions, parents: styleParents },
   };
 
   const unpositioned = doc.machine.states.map((s) => s.id).filter((id) => !layoutStates[id]);

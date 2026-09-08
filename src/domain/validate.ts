@@ -23,6 +23,7 @@ export type IssueCode =
   | 'ORPHAN_LAYOUT'
   | 'ORPHAN_STATE_STYLE'
   | 'ORPHAN_TRANSITION_STYLE'
+  | 'ORPHAN_PARENT_STYLE'
   | 'NO_FINAL_STATE'
   | 'UNREACHABLE_STATE'
   | 'FINAL_STATE_HAS_OUTGOING';
@@ -194,6 +195,18 @@ export function validateDocument(doc: StateMachineDocument): ValidationIssue[] {
         code: 'ORPHAN_TRANSITION_STYLE',
         message: `styles.transitions tiene una entrada para la transición inexistente "${id}".`,
         path: `styles.transitions.${id}`,
+        elementId: id,
+      });
+    }
+  }
+
+  for (const id of Object.keys(styles.parents)) {
+    if (!parentIds.has(id)) {
+      issues.push({
+        severity: 'warning',
+        code: 'ORPHAN_PARENT_STYLE',
+        message: `styles.parents tiene una entrada para el estado padre inexistente "${id}".`,
+        path: `styles.parents.${id}`,
         elementId: id,
       });
     }

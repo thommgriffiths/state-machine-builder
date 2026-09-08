@@ -67,9 +67,10 @@ las elimine: lo hará y lo informará.
     }
   },
   "styles": {
-    "defaults": { "stateColor": "#000000", "transitionColor": "#000000" },
+    "defaults": { "stateColor": "#000000", "transitionColor": "#000000", "parentColor": "#1F6FB2" },
     "states": { "cancelado": { "color": "#C0392B" } },
-    "transitions": { "t-cancelar": { "color": "#C0392B", "curvature": 0.25, "lineStyle": "dashed" } }
+    "transitions": { "t-cancelar": { "color": "#C0392B", "curvature": 0.25, "lineStyle": "dashed" } },
+    "parents": { "parent-1": { "color": "#7B3FA0" } }
   }
 }
 ```
@@ -136,10 +137,12 @@ agrupan subestados:
 - Eliminar un padre **no borra sus subestados**: quedan sueltos. Un padre sin
   subestados se acepta, pero se avisa.
 
-Cómo se ve un padre es asunto de la herramienta, no del documento: dibuja una
-envolvente alrededor de sus subestados y puede plegarlo en un único nodo. Nada
-de eso tiene representación en el JSON: no hay entrada de layout para el padre
-ni bandera de plegado. No agregues campos para expresarlo.
+Dónde se dibuja un padre es asunto de la herramienta: la envolvente sale de las
+posiciones de sus subestados, y plegarla en un único nodo es un modo de ver, no
+un dato. Nada de eso tiene representación en el JSON: no hay entrada de
+`layout` para el padre ni bandera de plegado, y no debés agregar campos para
+expresarlo. Lo único suyo que sí se guarda es el color, en
+`styles.parents[id].color`.
 
 ### `layout` (presentación; opcional)
 
@@ -152,8 +155,9 @@ ni bandera de plegado. No agregues campos para expresarlo.
 
 ### `styles` (presentación; opcional)
 
-- `defaults.stateColor` / `defaults.transitionColor`: color base (por defecto
-  negro).
+- `defaults.stateColor` / `defaults.transitionColor` / `defaults.parentColor`:
+  color base de cada tipo de elemento (negro los dos primeros, azul el de los
+  estados padre).
 - `states[id].color`, `transitions[id].color`: color CSS (usá hex). **El color
   no tiene semántica**: una transición roja no significa "error" salvo que
   `machine` lo diga (por ejemplo con `event` o `label`). No infieras negocio a
@@ -163,6 +167,11 @@ ni bandera de plegado. No agregues campos para expresarlo.
   transiciones paralelas). En auto-transiciones controla la posición angular
   del bucle (0 arriba, 0.5 derecha, -0.5 izquierda, ±1 abajo).
 - `transitions[id].lineStyle`: `"solid"` (por defecto) o `"dashed"`.
+- `parents[id].color`: color del grupo, indexado por id de **estado padre**. Es
+  un solo color: la herramienta deriva de él el fondo de la envolvente (un
+  tinte claro), su borde y su etiqueta, así que conviene elegir un color pleno
+  y no uno ya aclarado. No inventes claves para el fondo o el borde por
+  separado; no existen.
 
 ## Reglas de IDs
 
@@ -224,6 +233,9 @@ con otro id). No toques `layout`.
 Agregá el padre a `machine.parents` y poné su id en el `parentId` de cada
 subestado. No agregues nada a `layout` ni cambies transiciones: la
 envolvente se dibuja sola a partir de las posiciones de los subestados.
+
+Para distinguir las etapas a simple vista podés darle un color a cada una en
+`styles.parents[id].color`. Es presentación: no expresa nada del negocio.
 
 ### Documentar
 

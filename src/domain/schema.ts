@@ -101,15 +101,24 @@ export const transitionStyleSchema = z.strictObject({
   lineStyle: z.enum(['solid', 'dashed']).optional(),
 });
 
+export const parentStyleSchema = z.strictObject({
+  color: cssColor.describe('Color del grupo; el fondo y el borde de la envolvente se derivan de él').optional(),
+});
+
 export const styleDefaultsSchema = z.strictObject({
   stateColor: cssColor.default(DEFAULT_STYLE_DEFAULTS.stateColor),
   transitionColor: cssColor.default(DEFAULT_STYLE_DEFAULTS.transitionColor),
+  parentColor: cssColor.default(DEFAULT_STYLE_DEFAULTS.parentColor),
 });
 
 export const stylesSchema = z.strictObject({
   defaults: styleDefaultsSchema.prefault({}),
   states: z.record(idSchema, stateStyleSchema).default({}),
   transitions: z.record(idSchema, transitionStyleSchema).default({}),
+  parents: z
+    .record(idSchema, parentStyleSchema)
+    .default({})
+    .describe('Color por estado padre, indexado por ID de padre'),
 });
 
 export const documentSchema = z
