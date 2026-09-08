@@ -7,5 +7,11 @@ dist
 # Insumos de referencia que no se versionan
 first-sample.html
 
+# Diagramas y documentos de trabajo locales
+# Este repositorio versiona la herramienta, no las máquinas en construcción.
+/diagrams/
+/docs/migraciones/
+/to-be-parsed/
+
 # Estado local de la CLI de Netlify (vínculo con el sitio)
 .netlify

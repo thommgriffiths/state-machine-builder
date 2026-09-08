@@ -39,6 +39,14 @@ npm run validate -- ruta/al/documento.json
 
 Si en el futuro se cambia la librería gráfica, el formato no cambia.
 
+## Versión desplegada y entorno local
+
+La versión desplegada está disponible en
+[https://statemachinebuilder.netlify.app/](https://statemachinebuilder.netlify.app/).
+Cuando una tarea no modifica la lógica de la webapp, no hace falta levantar el
+ambiente local, salvo que hacerlo facilite el testing o la creación de un
+diagrama.
+
 ## Cambios al código
 
 - Arquitectura y decisiones: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
